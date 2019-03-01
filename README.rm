@@ -55,10 +55,10 @@ How to use Colonoscopy?
   Files can be attached VIA NAS or other technology, as long as Read/Writer permissions are granted to the executing user.
 
 Example of monolythic list generation?
-  ex: tar -zxvf SomeCollection.gz; cat ./SomeCollection/*.txt >>./SomeCollection/Somecollection.txt
+  ex: tar -zxvf SomeCollection.gz; cat ./SomeCollection/*.txt >>./Somecollection.txt
 
 Example of execution?
-  ex:  colonoscopy.rb ./SomeCollection/Somecollection.txt
+  ex:  colonoscopy.rb ./Somecollection.txt
 
       ./evidence/
             |

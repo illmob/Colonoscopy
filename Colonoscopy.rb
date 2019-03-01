@@ -42,7 +42,6 @@ banner += '[Initialize]"'
 banner += ''
 
 def initial
-
 	$counter = 0
 	$wsize = 500000
 	$infile = ARGV[0]

@@ -27,7 +27,7 @@ banner.append(' '*12+",xNMM0c."+" "*21+".c0MMMMMMMWKkl'"+" "*6+".;dNMMk."+" "*7+
 banner.append(' '*9+"'dNMMKl."+" "*21+".c0MMWx,"+" "*1+"..."+" "*3+".lKNK00XWMMM0l."+" "*11+"klO,")
 banner.append(' '*7+",KMMKl."+" "*22+":OMMWk;"+" "*7+".lKMMNxxxxdo:'"+" "*16+"O:0.")
 banner.append(' '*7+"dMM0'"+" "*21+".cOWMNx;"+" "*6+".'dKMMXd'"+" "*25+".0ck")
-banner.append(' '*5+";MMO"+" "*20+".c0MMNx,"+" "*7+"'dNMMXo."+" "*20+"llO'")
+banner.append(' '*5+";MMO"+" "*20+".c0MMNx,"+" "*7+"'dNMMXo."+" "*30+"llO'")
 banner.append(' '*6+"dMM,"+" "*17+".cOMMWk,"+" "*7+"'oXMMXo."+" "*32+".Kcd")
 banner.append(' '*6+"lMMl"+" "*17+"dWMMK."+" "*6+".oXMMXo."+" "*36+"k:K")
 banner.append(' '*6+".XMW;"+" "*17+".xWMWo"+" "*3+"lXMMXo'"+" "*39+":ok'")

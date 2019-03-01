@@ -1,0 +1,78 @@
+     lXMMXk:.                                                   ,Kx,
+       .ckNMMNx:.                                               :0MMK;
+           'lOWMMKd,                                              '0MMx
+               ,oKMMM0l'                                    .'.     xMMd
+                  .;dKMMWOl'                     ..,.......:MMo      0MM'
+                      .;xXMMWOc.              :;:o,;c;:;l:'xMM:dolccclxk:
+                        ,xWMM0c.              ,:'.'.'..   :MM0.,:cccoxxoo:.
+                     'dNMMKl.                            lWMX.       odooddd:
+                  'dNMMKl.                            .cKMMk        kMMc .odok:
+               ,dXMM0l.                     .:c;;;:lxKMMNd.       ;XMWl     ldlk.
+            ,xNMM0c.                     .c0MMMMMMMWKkl'      .;dNMMk.       .klk;
+         'dNMMKl.                     .c0MMWx, ...   .lKNK00XWMMM0l.           klO,
+       ,KMMKl.                      :OMMWk;       .lKMMNxxxxdo:'                O:0.
+      dMM0'                     .cOWMNx;       'dKMMXd'                         .0ck
+     ;MMO                    .c0MMNx,       'dNMMXo.                             llO'
+     dMM,                 .cOMMWk,       'oXMMXo.                                .Kcd
+     lMMl                 dWMMK.      .oXMMXo.                                    k:K
+     .XMW;                 .xWMWo   lXMMXo'                                       :ok'
+      .kMM0;                 .dWMWd..dWMNl                                        .0cl
+        .kMMK;                  oWMWx. oWMWo                                       0:0
+          .kMMK;                  oWMWx. oWMWo                                     oc0.
+            .kMMK;                  oWMWx. oWMWo                                   .0cd
+              .xWMX:                  lNMWx. lNMWd.                                 dlO'
+                .xWMNc                  cNMMk. cNMMk.                                Ock;
+                  .xWMNc                  cNMMk. :KMMk.                               odddc,..
+                    .xWMNc                  cNMMk' ;KMMk.                              .lldxxx.
+                      .xWMNc                  cNMM0, ;KMMk.                                ..'
+                        .dWMNl                  :KMM0; ;0MMO'
+                           oWMWo                  ,0MMK, ,0MM0,
+                             oWMWo                  ,0MMx  ,0MM0,
+                               oWMWo                  xMMo   ,0MM0.
+                                 lNMWd.                WMK     ,XMW'
+                                   cNMWx.             .WMK      'MM0		[CodeName]:	Colonoscopy
+                                     cNMWx.          .0MM:       XMX		[Produced]:	illMob - Q1/2019
+                                       cNMWx'      .oNMW:       ;MMk		[Moto/PSA]:	Get yo shit checked!
+                                         cXMMWKOO0NMMMk.       lWMX.
+                                           .;ldxxxokWMWOo:;:lkNMWd.
+                                                     ;d0NMMMWXk:
+What is Colonoscopy?
+  An application that was produced to aid in the extraction of useful information from the publically released
+  Collection dumps. These dumps were compiled in a way that makes any single query useless and missing vital
+  information based on patterns or other techniques.Colonoscopy goes deep into the dumps and attemtps to extract 
+  potential and known Username:Password credential pairs.
+  
+  The application will not unzip any of the contents and will require the user to perform some actions (or script) that
+  will generate a monolithic file from these .txt files. These files will contian different versions of these credential
+  pairs which can be a daungting task to extract from common methods.
+
+  The application will do its best to ensure these files are as true and uncontaminated as possible. Users may have to 
+  ensure the filters have properly worked by examining the output for errors. These files will be contaioned in the 'evidence' 
+  directory and a project name will be assertained from the filename.
+
+How to use Colonoscopy?
+  This is a OS independent Commandline application. This application should be used on the OS where the files are located. The
+  Files can be attached VIA NAS or other technology, as long as Read/Writer permissions are granted to the executing user.
+
+Example of execution?
+  ex:  colonoscopy.rb ./mynewlist.txt
+
+      ./evidence/
+            |
+            | --./mynewlist/
+            |       |
+            |       | --./cleaned.txt
+            |       | --./colon.txt
+            |       | --./semi.txt
+            |       | --./unknown.txt
+            |       | --./blaw.etc
+            |
+            | --./someothes/
+            |       | --.blaw.etc
+
+:[ATTENTION]:
+    If you add a second argument to the command, diagnostic output will be given
+    This will decrease the applicaitons performance dramtically, be forewarned.
+:[ATTENTION]:
+ 
+Any additional updates may include automation and additional filters if needed or provided by community support.

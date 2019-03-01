@@ -54,12 +54,15 @@ How to use Colonoscopy?
   This is a OS independent Commandline application. This application should be used on the OS where the files are located. The
   Files can be attached VIA NAS or other technology, as long as Read/Writer permissions are granted to the executing user.
 
+Example of monolythic list generation?
+  ex: tar -zxvf SomeCollection.gz; cat ./SomeCollection/*.txt >>./Somecollection.txt
+
 Example of execution?
-  ex:  colonoscopy.rb ./mynewlist.txt
+  ex:  colonoscopy.rb ./SomeCollection/Somecollection.txt
 
       ./evidence/
             |
-            | --./mynewlist/
+            | --./Somecollection/
             |       |
             |       | --./cleaned.txt
             |       | --./colon.txt
@@ -67,12 +70,14 @@ Example of execution?
             |       | --./unknown.txt
             |       | --./blaw.etc
             |
-            | --./someothes/
+            | --./SomeOthercollection/
             |       | --.blaw.etc
 
 :[ATTENTION]:
-    If you add a second argument to the command, diagnostic output will be given
-    This will decrease the applicaitons performance dramtically, be forewarned.
+    [!] The application uses the input name to set a project folder in the 'evidence' directory
+          [-] If you use the same name for the input folder as an existing project output, it will be overwritten
+    [!] If you add a second argument to the command, diagnostic output will be given
+          [-] This will decrease the applicaitons performance dramtically, be forewarned.
 :[ATTENTION]:
  
 Any additional updates may include automation and additional filters if needed or provided by community support.

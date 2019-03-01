@@ -1,47 +1,63 @@
-banner  = '-'*80+"\n"
-banner += ' '*5+"lXMMXk:."+" "*51+",Kx,"
-banner += ' '*7+".ckNMMNx:."+" "*47+":0MMK;"
-banner += ' '*11+"'lOWMMKd,"+" "*46+"'0MMx"
-banner += ' '*15+",oKMMM0l'"+" "*36+".'."+" "*5+"xMMd"
-banner += ' '*18+".;dKMMWOl'"+" "*21+"..,.......:MMo"+" "*6+"0MM'"
-banner += ' '*23+".;xXMMWOc."+" "*14+":;:o,;c;:;l:'xMM:dolccclxk:"
-banner += ' '*25+",xWMM0c."+" "*14+",:'.'.'.."+" "*3+":MM0.,:cccoxxoo:."
-banner += ' '*22+"'dNMMKl."+" "*28+"lWMX."+" "*7+"odooddd:"
-banner += ' '*18+"'dNMMKl."+" "*28+".cKMMk"+" "*8+"kMMc"+" "*1+".odok:"
-banner += ' '*15+",dXMM0l."+" "*21+".:c;;;:lxKMMNd."+" "*7+";XMWl"+" "*5+"ldlk."
-banner += ' '*12+",xNMM0c."+" "*21+".c0MMMMMMMWKkl'"+" "*6+".;dNMMk."+" "*7+".klk;"
-banner += ' '*9+"'dNMMKl."+" "*21+".c0MMWx,"+" "*1+"..."+" "*3+".lKNK00XWMMM0l."+" "*11+"klO,"
-banner += ' '*7+",KMMKl."+" "*22+":OMMWk;"+" "*7+".lKMMNxxxxdo:'"+" "*16+"O:0."
-banner += ' '*7+"dMM0'"+" "*21+".cOWMNx;"+" "*47+"'dKMMXd'"+" "*25+".0ck"
-banner += ' '*5+";MMO"+" "*20+".c0MMNx,"+" "*7+"'dNMMXo."+" "*29+"llO'"
-banner += ' '*6+"dMM,"+" "*17+".cOMMWk,"+" "*7+"'oXMMXo."+" "*32+".Kcd"
-banner += ' '*6+"lMMl"+" "*17+"dWMMK."+" "*6+".oXMMXo."+" "*36+"k:K"
-banner += ' '*6+".XMW;"+" "*17+".xWMWo"+" "*3+"lXMMXo'"+" "*39+":ok'"
-banner += ' '*7+".kMM0;"+" "*17+".dWMWd"+" "*2+"dWMNl"+" "*40+".0cl"
-banner += ' '*9+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*39+"0:0"
-banner += ' '*10+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*37+"oc0."
-banner += ' '*12+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*35+".0cd"
-banner += ' '*14+".xWMX:"+" "*18+"lNMWx."+" "*1+"lNMWd."+" "*33+"dlO'"
-banner += ' '*16+".xWMNc"+" "*18+"cNMMk."+" "*1+"cNMMk."+" "*32+"Ock;"
-banner += ' '*18+".xWMNc"+" "*18+"cNMMk."+" "*1+":KMMk."+" "*31+"odddc,.."
-banner += ' '*20+".xWMNc"+" "*18+"cNMMk'"+" "*1+";KMMk."+" "*30+".lldxxx."
-banner += ' '*22+".xWMNc"+" "*18+"cNMM0,"+" "*1+";KMMk."+" "*32+"..'"
-banner += ' '*24+".dWMNl"+" "*18+":KMM0;"+" "*1+";0MMO'"
-banner += ' '*27+"oWMWo"+" "*18+",0MMK,"+" "*1+",0MM0,"
-banner += ' '*29+"oWMWo"+" "*18+",0MMx"+" "*1+",0MM0,"
-banner += ' '*31+"oWMWo"+" "*18+"xMMo"+" "*3+",0MM0."
-banner += ' '*33+"lNMWd."+" "*16+"WMK"+" "*5+",XMW'"
-banner += ' '*35+"cNMWx."+" "*13+".WMK"+" "*6+"'MM0"+"\x09\x09\x5b\x43\x6f\x64\x65\x4e\x61\x6d\x65\x5d\x3a\x09\x43\x6f\x6c\x6f\x6e\x6f\x73\x63\x6f\x70\x79"
-banner += ' '*37+"cNMWx."+" "*10+".0MM:"+" "*7+"XMX"+"\x5c\x74\x5c\x74\x5b\x50\x72\x6f\x64\x75\x63\x65\x64\x5d\x3a\x5c\x74\x69\x6c\x6c\x4d\x6f\x62\x20\x2d\x20\x51\x31\x2f\x32\x30\x31\x39"
-banner += ' '*39+"cNMWx'"+" "*6+".oNMW:"+" "*7+";MMk"+"\x5c\x74\x5c\x74\x5b\x4d\x6f\x74\x6f\x2f\x50\x53\x41\x5d\x3a\x5c\x74\x47\x65\x74\x20\x79\x6f\x20\x73\x68\x69\x74\x20\x63\x68\x65\x63\x6b\x65\x64\x21"
-banner += ' '*42+"cXMMWKOO0NMMMk."+" "*7+"lWMX."
-banner += ' '*43+".;ldxxxokWMWOo:;:lkNMWd."
-banner += ' '*53+";d0NMMMWXk:\n"
-banner += '-'*80
-banner += '[Initialize]"'
-banner += ''
+ct  = "\x09\x09\x5b\x43\x6f\x64\x65\x4e"
+ct += "\x65\x5d\x3a\x09\x43\x6f\x6c\x6f"
+ct += "\x6e\x6f\x73\x63\x6f\x70\x79\x00"
+pt  = "\x5c\x74\x5c\x74\x5b\x50\x72\x6f"
+pt += "\x64\x75\x63\x65\x64\x5d\x3a\x5c"
+pt += "\x74\x69\x6c\x6c\x4d\x6f\x62\x20"
+pt += "\x2d\x20\x51\x31\x2f\x32\x30\x31"
+pt += "\x39\x00\x00\x00\x00\x00\x00\x00"
+gt  = "\x5c\x74\x5c\x74\x5b\x4d\x6f\x74"
+gt += "\x6f\x2f\x50\x53\x41\x5d\x3a\x5c"
+gt += "\x74\x47\x65\x74\x20\x79\x6f\x20"
+gt += "\x73\x68\x69\x74\x20\x63\x68\x65"
+gt += "\x63\x6b\x65\x64\x21\x00\x00\x00"
+banner = []
+banner.append('-'*80)
+banner.append(' '*5+"lXMMXk:."+" "*51+",Kx,")
+banner.append(' '*7+".ckNMMNx:."+" "*47+":0MMK;")
+banner.append(' '*11+"'lOWMMKd,"+" "*46+"'0MMx")
+banner.append(' '*15+",oKMMM0l'"+" "*36+".'."+" "*5+"xMMd")
+banner.append(' '*18+".;dKMMWOl'"+" "*21+"..,.......:MMo"+" "*6+"0MM'")
+banner.append(' '*23+".;xXMMWOc."+" "*14+":;:o,;c;:;l:'xMM:dolccclxk:")
+banner.append(' '*25+",xWMM0c."+" "*14+",:'.'.'.."+" "*3+":MM0.,:cccoxxoo:.")
+banner.append(' '*22+"'dNMMKl."+" "*28+"lWMX."+" "*7+"odooddd:")
+banner.append(' '*18+"'dNMMKl."+" "*28+".cKMMk"+" "*8+"kMMc"+" "*1+".odok:")
+banner.append(' '*15+",dXMM0l."+" "*21+".:c;;;:lxKMMNd."+" "*7+";XMWl"+" "*5+"ldlk.")
+banner.append(' '*12+",xNMM0c."+" "*21+".c0MMMMMMMWKkl'"+" "*6+".;dNMMk."+" "*7+".klk;")
+banner.append(' '*9+"'dNMMKl."+" "*21+".c0MMWx,"+" "*1+"..."+" "*3+".lKNK00XWMMM0l."+" "*11+"klO,")
+banner.append(' '*7+",KMMKl."+" "*22+":OMMWk;"+" "*7+".lKMMNxxxxdo:'"+" "*16+"O:0.")
+banner.append(' '*7+"dMM0'"+" "*21+".cOWMNx;"+" "*6+".'dKMMXd'"+" "*25+".0ck")
+banner.append(' '*5+";MMO"+" "*20+".c0MMNx,"+" "*7+"'dNMMXo."+" "*20+"llO'")
+banner.append(' '*6+"dMM,"+" "*17+".cOMMWk,"+" "*7+"'oXMMXo."+" "*32+".Kcd")
+banner.append(' '*6+"lMMl"+" "*17+"dWMMK."+" "*6+".oXMMXo."+" "*36+"k:K")
+banner.append(' '*6+".XMW;"+" "*17+".xWMWo"+" "*3+"lXMMXo'"+" "*39+":ok'")
+banner.append(' '*7+".kMM0;"+" "*17+".dWMWd"+" "*2+"dWMNl"+" "*40+".0cl")
+banner.append(' '*9+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*38+"0:0")
+banner.append(' '*10+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*37+"oc0.")
+banner.append(' '*12+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*35+".0cd")
+banner.append(' '*14+".xWMX:"+" "*18+"lNMWx."+" "*1+"lNMWd."+" "*33+"dlO'")
+banner.append(' '*16+".xWMNc"+" "*18+"cNMMk."+" "*1+"cNMMk."+" "*32+"Ock;")
+banner.append(' '*18+".xWMNc"+" "*18+"cNMMk."+" "*1+":KMMk."+" "*31+"odddc,..")
+banner.append(' '*20+".xWMNc"+" "*18+"cNMMk'"+" "*1+";KMMk."+" "*30+".lldxxx.")
+banner.append(' '*22+".xWMNc"+" "*18+"cNMM0,"+" "*1+";KMMk."+" "*32+"..'")
+banner.append(' '*24+".dWMNl"+" "*18+":KMM0;"+" "*1+";0MMO'")
+banner.append(' '*27+"oWMWo"+" "*18+",0MMK,"+" "*1+",0MM0,")
+banner.append(' '*29+"oWMWo"+" "*18+",0MMx"+" "*1+",0MM0,")
+banner.append(' '*31+"oWMWo"+" "*18+"xMMo"+" "*3+",0MM0.")
+banner.append(' '*33+"lNMWd."+" "*16+"WMK"+" "*5+",XMW'")
+banner.append(' '*35+"cNMWx."+" "*13+".WMK"+" "*6+"'MM0"+ct)
+banner.append(' '*37+"cNMWx."+" "*10+".0MM:"+" "*7+"XMX"+pt)
+banner.append(' '*39+"cNMWx'"+" "*6+".oNMW:"+" "*7+";MMk"+gt)
+banner.append(' '*42+"cXMMWKOO0NMMMk."+" "*7+"lWMX.")
+banner.append(' '*43+".;ldxxxokWMWOo:;:lkNMWd.")
+banner.append(' '*53+";d0NMMMWXk:")
+banner.append('-'*80)
+banner.append('[Initialize]')
+banner.append('')
+
 
 def initial
+
 	$counter = 0
 	$wsize = 500000
 	$infile = ARGV[0]
@@ -382,7 +398,7 @@ def unknown(x)
 		$data[:unknown].append(x)
 	end		
 end
-puts banner
+puts banner.join("\n")
 initial
 IO.foreach($infile) {|x|
 	$counter +=1

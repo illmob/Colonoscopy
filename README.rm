@@ -39,7 +39,7 @@
 What is Colonoscopy?
   An application that was produced to aid in the extraction of useful information from the publically released
   Collection dumps. These dumps were compiled in a way that makes any single query useless and missing vital
-  information based on patterns or other techniques. Colonoscopy goes deep into the dumps and attemtps to extract 
+  information based on patterns or other techniques. Colonoscopy goes deep into the dumps and attempts to extract 
   potential and known Username:Password credential pairs.
   
   The application will not unzip any of the contents and will require the user to perform some actions (or script) that

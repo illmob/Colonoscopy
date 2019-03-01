@@ -1,45 +1,45 @@
-banner = "
-     lXMMXk:.                                                   ,Kx,
-       .ckNMMNx:.                                               :0MMK;
-           'lOWMMKd,                                              '0MMx
-               ,oKMMM0l'                                    .'.     xMMd
-                  .;dKMMWOl'                     ..,.......:MMo      0MM'
-                      .;xXMMWOc.              :;:o,;c;:;l:'xMM:dolccclxk:
-                        ,xWMM0c.              ,:'.'.'..   :MM0.,:cccoxxoo:.
-                     'dNMMKl.                            lWMX.       odooddd:
-                  'dNMMKl.                            .cKMMk        kMMc .odok:
-               ,dXMM0l.                     .:c;;;:lxKMMNd.       ;XMWl     ldlk.
-            ,xNMM0c.                     .c0MMMMMMMWKkl'      .;dNMMk.       .klk;
-         'dNMMKl.                     .c0MMWx, ...   .lKNK00XWMMM0l.           klO,
-       ,KMMKl.                      :OMMWk;       .lKMMNxxxxdo:'                O:0.
-      dMM0'                     .cOWMNx;       'dKMMXd'                         .0ck
-     ;MMO                    .c0MMNx,       'dNMMXo.                             llO'
-     dMM,                 .cOMMWk,       'oXMMXo.                                .Kcd
-     lMMl                 dWMMK.      .oXMMXo.                                    k:K
-     .XMW;                 .xWMWo   lXMMXo'                                       :ok'
-      .kMM0;                 .dWMWd..dWMNl                                        .0cl
-        .kMMK;                  oWMWx. oWMWo                                       0:0
-          .kMMK;                  oWMWx. oWMWo                                     oc0.
-            .kMMK;                  oWMWx. oWMWo                                   .0cd
-              .xWMX:                  lNMWx. lNMWd.                                 dlO'
-                .xWMNc                  cNMMk. cNMMk.                                Ock;
-                  .xWMNc                  cNMMk. :KMMk.                               odddc,..
-                    .xWMNc                  cNMMk' ;KMMk.                              .lldxxx.
-                      .xWMNc                  cNMM0, ;KMMk.                                ..'
-                        .dWMNl                  :KMM0; ;0MMO'
-                           oWMWo                  ,0MMK, ,0MM0,
-                             oWMWo                  ,0MMx  ,0MM0,
-                               oWMWo                  xMMo   ,0MM0.
-                                 lNMWd.                WMK     ,XMW'
-                                   cNMWx.             .WMK      'MM0		[CodeName]:	Colonoscopy
-                                     cNMWx.          .0MM:       XMX		[Produced]:	illMob - Q1/2019
-                                       cNMWx'      .oNMW:       ;MMk		[Moto/PSA]:	Get yo shit checked!
-                                         cXMMWKOO0NMMMk.       lWMX.
-                                           .;ldxxxokWMWOo:;:lkNMWd.
-                                                     ;d0NMMMWXk:
--------------------------------------------------------------------------------
-[Initialize]
-"
+banner  = '-'*80+"\n"
+banner += ' '*5+"lXMMXk:."+" "*51+",Kx,"
+banner += ' '*7+".ckNMMNx:."+" "*47+":0MMK;"
+banner += ' '*11+"'lOWMMKd,"+" "*46+"'0MMx"
+banner += ' '*15+",oKMMM0l'"+" "*36+".'."+" "*5+"xMMd"
+banner += ' '*18+".;dKMMWOl'"+" "*21+"..,.......:MMo"+" "*6+"0MM'"
+banner += ' '*23+".;xXMMWOc."+" "*14+":;:o,;c;:;l:'xMM:dolccclxk:"
+banner += ' '*25+",xWMM0c."+" "*14+",:'.'.'.."+" "*3+":MM0.,:cccoxxoo:."
+banner += ' '*22+"'dNMMKl."+" "*28+"lWMX."+" "*7+"odooddd:"
+banner += ' '*18+"'dNMMKl."+" "*28+".cKMMk"+" "*8+"kMMc"+" "*1+".odok:"
+banner += ' '*15+",dXMM0l."+" "*21+".:c;;;:lxKMMNd."+" "*7+";XMWl"+" "*5+"ldlk."
+banner += ' '*12+",xNMM0c."+" "*21+".c0MMMMMMMWKkl'"+" "*6+".;dNMMk."+" "*7+".klk;"
+banner += ' '*9+"'dNMMKl."+" "*21+".c0MMWx,"+" "*1+"..."+" "*3+".lKNK00XWMMM0l."+" "*11+"klO,"
+banner += ' '*7+",KMMKl."+" "*22+":OMMWk;"+" "*7+".lKMMNxxxxdo:'"+" "*16+"O:0."
+banner += ' '*7+"dMM0'"+" "*21+".cOWMNx;"+" "*47+"'dKMMXd'"+" "*25+".0ck"
+banner += ' '*5+";MMO"+" "*20+".c0MMNx,"+" "*7+"'dNMMXo."+" "*29+"llO'"
+banner += ' '*6+"dMM,"+" "*17+".cOMMWk,"+" "*7+"'oXMMXo."+" "*32+".Kcd"
+banner += ' '*6+"lMMl"+" "*17+"dWMMK."+" "*6+".oXMMXo."+" "*36+"k:K"
+banner += ' '*6+".XMW;"+" "*17+".xWMWo"+" "*3+"lXMMXo'"+" "*39+":ok'"
+banner += ' '*7+".kMM0;"+" "*17+".dWMWd"+" "*2+"dWMNl"+" "*40+".0cl"
+banner += ' '*9+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*39+"0:0"
+banner += ' '*10+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*37+"oc0."
+banner += ' '*12+".kMMK;"+" "*18+"oWMWx."+" "*1+"oWMWo"+" "*35+".0cd"
+banner += ' '*14+".xWMX:"+" "*18+"lNMWx."+" "*1+"lNMWd."+" "*33+"dlO'"
+banner += ' '*16+".xWMNc"+" "*18+"cNMMk."+" "*1+"cNMMk."+" "*32+"Ock;"
+banner += ' '*18+".xWMNc"+" "*18+"cNMMk."+" "*1+":KMMk."+" "*31+"odddc,.."
+banner += ' '*20+".xWMNc"+" "*18+"cNMMk'"+" "*1+";KMMk."+" "*30+".lldxxx."
+banner += ' '*22+".xWMNc"+" "*18+"cNMM0,"+" "*1+";KMMk."+" "*32+"..'"
+banner += ' '*24+".dWMNl"+" "*18+":KMM0;"+" "*1+";0MMO'"
+banner += ' '*27+"oWMWo"+" "*18+",0MMK,"+" "*1+",0MM0,"
+banner += ' '*29+"oWMWo"+" "*18+",0MMx"+" "*1+",0MM0,"
+banner += ' '*31+"oWMWo"+" "*18+"xMMo"+" "*3+",0MM0."
+banner += ' '*33+"lNMWd."+" "*16+"WMK"+" "*5+",XMW'"
+banner += ' '*35+"cNMWx."+" "*13+".WMK"+" "*6+"'MM0"+"\x09\x09\x5b\x43\x6f\x64\x65\x4e\x61\x6d\x65\x5d\x3a\x09\x43\x6f\x6c\x6f\x6e\x6f\x73\x63\x6f\x70\x79"
+banner += ' '*37+"cNMWx."+" "*10+".0MM:"+" "*7+"XMX"+"\x5c\x74\x5c\x74\x5b\x50\x72\x6f\x64\x75\x63\x65\x64\x5d\x3a\x5c\x74\x69\x6c\x6c\x4d\x6f\x62\x20\x2d\x20\x51\x31\x2f\x32\x30\x31\x39"
+banner += ' '*39+"cNMWx'"+" "*6+".oNMW:"+" "*7+";MMk"+"\x5c\x74\x5c\x74\x5b\x4d\x6f\x74\x6f\x2f\x50\x53\x41\x5d\x3a\x5c\x74\x47\x65\x74\x20\x79\x6f\x20\x73\x68\x69\x74\x20\x63\x68\x65\x63\x6b\x65\x64\x21"
+banner += ' '*42+"cXMMWKOO0NMMMk."+" "*7+"lWMX."
+banner += ' '*43+".;ldxxxokWMWOo:;:lkNMWd."
+banner += ' '*53+";d0NMMMWXk:\n"
+banner += '-'*80
+banner += '[Initialize]"'
+banner += ''
 
 def initial
 

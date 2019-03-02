@@ -54,11 +54,30 @@ How to use Colonoscopy?
   This is a OS independent Commandline application. This application should be used on the OS where the files are located. The
   Files can be attached VIA NAS or other technology, as long as Read/Writer permissions are granted to the executing user.
 
-Example of monolythic list generation?
-  ex: tar -zxvf SomeCollection.gz; cat ./SomeCollection/*.txt >>./Somecollection.txt
+What is the theory being Colonoscopy?
+   The application is designed to process large wordlist through sorting and further processing to identify useful patters 
+   in the Collection# dumps. The theory is the user can input two different forms of input. a monolythic file which contains
+   millions of lines of input. Or to process Gunzip files in a directory of your choosing. Either process used can be scripted.
+   
+   It should be metioned that the application in single filemode may perform better as there is no overhead or memory requirements.
+   In single file mode, the application reads line by line reducing the overall time of computation. Additionally, the application
+   will write the data to disk in blocks to reduce IO performance impacts.
+   
+   In Gunzip bulk mode, the application can be allowed to run in the background performing its actions over time. This can be useful
+   for headless systems which are not in any rush for the datasets. This is intended to be used on the Collection dumps raw files.
+   The benifit other than automation, is accuracy to the data, and filenames. This allows the user to identify where the passwords 
+   were identified and contained in which 'collection'
+   
+   The application may take a performance hit when dealing with unique and sorting of larger datasets. Ruby is not ideal for such
+   processes, however there are some great cuda toosl which allows for the GPU to offload these processes for increaded performance.
 
-Example of execution?
+Example of single file execution?
   ex:  colonoscopy.rb ./Somecollection.txt
+
+Example of gz file execution?
+  ex:  colonoscopy.rb ./
+  
+ Example of expected output?
 
       ./evidence/
             |

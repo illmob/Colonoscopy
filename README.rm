@@ -72,10 +72,10 @@ What is the theory being Colonoscopy?
   processes, however there are some great cuda toosl which allows for the GPU to offload these processes for increaded performance.
 
 Example of single file execution?
-  ex:  colonoscopy.rb ./Somecollection.txt
+  ex:  Colonoscopy.rb ./Somecollection.txt
 
 Example of gz file execution?
-  ex:  colonoscopy.rb ./
+  ex:  Colonoscopy.rb ./
 
 Example of expected output?
 

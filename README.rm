@@ -69,7 +69,8 @@ What is the theory being Colonoscopy?
   were identified and contained in which 'collection'
    
   The application may take a performance hit when dealing with unique and sorting of larger datasets. Ruby is not ideal for such
-  processes, however there are some great cuda toosl which allows for the GPU to offload these processes for increaded performance.
+  processes, however there are some great cuda applications which allows for the GPU to offload these processes for increaded 
+  performance. Currently the application tries to reduce the amount of disk space consumed, this  may change in future releases.
 
 Example of single file execution?
   ex:  Colonoscopy.rb ./Somecollection.txt

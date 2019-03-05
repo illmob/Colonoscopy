@@ -90,7 +90,7 @@ Example of bulk gz file execution?
   ex:  Colonoscopy.rb -i ./ -t gz
 
 Example of bulk gz file execution to given folder?
-  ex:  Colonoscopy.rb -i ./ -t gz -o 
+  ex:  Colonoscopy.rb -i ./ -t gz -o ./mydump/Somecollection
 
 Example of bulk txt file execution with debugging?
   ex:  Colonoscopy.rb -i ./ -t gz -d

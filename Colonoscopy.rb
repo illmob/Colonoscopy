@@ -31,7 +31,7 @@ def userargs
     $options[:input] = o }  # create files in directory given by user, default if not given
    opt.on('-e','--explode','Explode contents of "tar.gz" files to disk') { |o|
     $options[:explode] = o }  # create files in directory given by user, default if not given
-   opt.on('-o','--output{=FOLDERNAM}','Location on disk to store contents generated') { |o|
+   opt.on('-o','--output{=FOLDERNAME}','Location on disk to store contents generated') { |o|
     $options[:folder] = o }  # location (folder) where to store the generated output
    opt.on('-d','--debug','Enables debugging information to be displayed') { |o|
     $options[:debug] = o }  # username from arguments @ cli

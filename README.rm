@@ -65,9 +65,9 @@ What is the theory being Colonoscopy?
   will write the data to disk in blocks to reduce IO performance impacts.
    
   In Gunzip bulk mode, the application can be allowed to run in the background performing its actions over time. This can be useful
-  for headless systems which are not in any rush for the datasets. This is intended to be used on the Collection dumps raw files.
-  The benifit other than automation, is accuracy to the data, and filenames. This allows the user to identify where the passwords 
-  were identified and contained in which 'collection'
+  for headless systems. This is intended to be used on the Collection dumps raw files. The benifit other than automation, 
+  is accuracy to the data, and filenames. This allows the user to identify where the passwords were identified and contained within 
+  which 'collection' examined.
    
   The application may take a performance hit when dealing with unique and sorting of larger datasets. Ruby is not ideal for such
   processes, however there are some great cuda applications which allows for the GPU to offload these processes for increaded 
@@ -97,7 +97,7 @@ Example of expected output?
 :[ATTENTION]:
     [!] The application uses the input name to set a project folder in the 'evidence' directory
           [-] If you use the same name for the input folder as an existing project output, it will be overwritten
-    [!] If you add a second argument to the command, diagnostic output will be given
+    [!] Diagnostic output will be given if using the argument -d and to add verbosity, use -v
           [-] This will decrease the applicaitons performance dramtically, be forewarned.
 :[ATTENTION]:
  

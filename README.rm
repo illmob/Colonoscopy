@@ -73,11 +73,27 @@ What is the theory being Colonoscopy?
   processes, however there are some great cuda applications which allows for the GPU to offload these processes for increaded 
   performance. Currently the application tries to reduce the amount of disk space consumed, this  may change in future releases.
 
-Example of single file execution?
-  ex:  Colonoscopy.rb ./Somecollection.txt
+Example of application options
 
-Example of gz file execution?
-  ex:  Colonoscopy.rb ./
+  Usage: pwdsort [options]
+      -t, --type TYPE                  Consume all files of type ["TXT","GZ"] in a directory
+      -i, --input FILE/FOLDER          location of file(s) to process
+      -e, --explode                    Explode contents of "tar.gz" files to disk
+      -o, --output{=FOLDERNAME}        Location on disk to store contents generated
+      -d, --debug                      Enables debugging information to be displayed
+      -v, --verbose                    Adds additional information to STDOUT, performance hit increases
+
+Example of single file execution?
+  ex:  Colonoscopy.rb -i ./Somecollection.(txt|gz)
+
+Example of bulk gz file execution?
+  ex:  Colonoscopy.rb -i ./ -t gz
+
+Example of bulk gz file execution to given folder?
+  ex:  Colonoscopy.rb -i ./ -t gz -o 
+
+Example of bulk txt file execution with debugging?
+  ex:  Colonoscopy.rb -i ./ -t gz -d
 
 Example of expected output?
 

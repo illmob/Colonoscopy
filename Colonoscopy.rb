@@ -5,8 +5,11 @@
 # [requirements] ##############################################################
 #
 # Application does require the following gems
-#  tar:: gem inststall tar
-#  zlib:: gem install zlib
+#  tar:: 	gem inststall tar
+#  zlib:: 	gem install zlib
+#  ostrut;	gem install ostrut
+#  optparse;	gem install optparse
+#  ipaddr;	gem install ipaddr
 ###############################################################################
 require 'zlib'
 require 'tar/reader'

@@ -5,11 +5,17 @@
 # [requirements] ##############################################################
 #
 # Application does require the following gems
-#  tar:: 	gem inststall tar
-#  zlib:: 	gem install zlib
-#  ostrut;	gem install ostrut
-#  optparse;	gem install optparse
-#  ipaddr;	gem install ipaddr
+#  tar:: gem inststall tar
+#  zlib:: gem install zlib
+###############################################################################
+#
+# TODO:
+#   :-- ElasticSearch integration (should  be simple)
+#     :-- Kibana Dashboards (would be awesome)
+#     :-- Backup and updating functionality (unknown)
+# 
+# 
+#
 ###############################################################################
 require 'zlib'
 require 'tar/reader'
@@ -33,7 +39,7 @@ def userargs
     $options[:explode] = o }  # create files in directory given by user, default if not given
    opt.on('-o','--output{=FOLDERNAME}','Location on disk to store contents generated') { |o|
     $options[:folder] = o }  # location (folder) where to store the generated output
-   opt.on('-d','--debug','Enables debugging information to be displayed') { |o|
+   opt.on('-d','--debug','Enables debugging information to be displayed, performance hit') { |o|
     $options[:debug] = o }  # username from arguments @ cli
    opt.on('-v','--verbose','Adds additional information to STDOUT, performance hit increases') { |o|
     $options[:verbose] = o }  # adds additional debugging information to STDOUT
@@ -60,7 +66,7 @@ pt += "\x6c\x4d\x6f\x62\x20\x2d\x20\x51\x31\x2f\x32\x30\x31\x39"
 gt  = "\x09\x09\x5b\x4d\x6f\x74\x6f\x2f"
 gt += "\x50\x53\x41\x5d\x3a\x09\x47\x65\x74\x20\x79\x6f\x20\x73\x68\x69"
 gt += "\x74\x20\x63\x68\x65\x63\x6b\x65\x64\x21"
-aa  = "\x3c\x3a\x43\x3b\x30\x3a\x7c\x3a\x30\x3b\x6e\x3a\x4f\x24\x3a\x43\x3a\x30\x3b\x50\x3a\x59\x2e\x5c"
+aa  = "\x20\x3c\x3a\x43\x3b\x30\x3a\x7c\x3a\x30\x3b\x6e\x3a\x4f\x24\x3a\x43\x3a\x30\x3b\x50\x3a\x59\x2e\x5c"
 ab  = "\x2e\x6c\x4b\x4e\x4b\x30\x30\x58\x57\x4d\x4d\x4d\x30\x6c\x2e"
 ac  = "\x63\x58\x4d\x4d\x57\x4b\x4f\x4f\x30\x4e\x4d\x4d\x4d\x6b\x2e"
 ad  = "\x2e\x3b\x6c\x64\x78\x78\x78\x6f"
@@ -80,9 +86,9 @@ banner.append("\x20"*5+"lXMMXk:."+"\x20"*51+",Kx,")
 banner.append("\x20"*7+".ckNMMNx:."+"\x20"*47+":0MMK;")
 banner.append("\x20"*11+"'lOWMMKd,"+"\x20"*46+"'0MMx")
 banner.append("\x20"*15+",oKMMM0l'"+"\x20"*36+".'."+"\x20"*5+"xMMd")
-banner.append("\x20"*18+".;dKMMWOl'"+"\x20"*21+af+"\x20"*6+"0M.\\")
+banner.append("\x20"*18+".;dKMMWOl'"+"\x20"*22+af+"\x20"*6+"0M.\\")
 banner.append("\x20"*23+".;xXMMWOc."+"\x20"*17+aa)
-banner.append("\x20"*25+",xWMM0c."+"\x20"*14+",:'.'.'.."+"\x20"*3+ag)
+banner.append("\x20"*25+",xWMM0c."+"\x20"*15+",:'.'.'.."+"\x20"*3+ag)
 banner.append("\x20"*22+"'dNMMKl."+"\x20"*28+"lWMX."+"\x20"*7+"odooddd:")
 banner.append("\x20"*18+"'dNMMKl."+"\x20"*28+".cKMMk"+"\x20"*8+"kMMc"+"\x20"*1+".odok:")
 banner.append("\x20"*15+",dXMM0l."+"\x20"*21+".:c;;;:lxKMMNd."+"\x20"*7+";XMWl"+"\x20"*5+"ldlk.")
@@ -146,8 +152,8 @@ def initial
   $filesin = []  # Set default list of files to be injested
   (if $verb; puts"[INITIAL]:: Default filesin #{$filesin}"; else ""; end) if $diag
   (if $verb; puts"[INITIAL]:: Default options[:folder] #{$options[:folder]}"; else ""; end) if $diag
-  if $options[:folder].to_s != ""; $directory_name = $options[:folder];
-   else; $directory_name = projname($options[:input].to_s); end  # Set default evidence directory
+  if $options[:folder].to_s != ""; $directory_name = $options[:folder]; end
+  #else; $directory_name = projname($options[:input].to_s); end  # Set default evidence directory
   puts "[INITIAL]:: Creating evidence directory"+(if $verb; ": #{$directory_name}"; else ""; end) if $diag
   Dir.mkdir($directory_name) unless Dir.exists?($directory_name) # Create DIR if it does not exists
   puts "[INITIAL]:: Exiting" if $diag

@@ -7,21 +7,25 @@
 # Application does require the following gems
 #  tar:: gem inststall tar
 #  zlib:: gem install zlib
+#  ipaddr:: gem install ipaddr
+#  optparse:: gem install optparse
+#  ostruct:: gem install ostruct
+#
 ###############################################################################
 #
 # TODO:
-#   :-- ElasticSearch integration (should  be simple)
-#     :-- Kibana Dashboards (would be awesome)
-#     :-- Backup and updating functionality (unknown)
-# 
-# 
-#
+#   :-- Researcher Operations (Re|Trace)
+#     :-- ElasticSearch integration (should  be simple)
+#       :-- Kibana Dashboards (would be awesome)
+#       :-- Backup and updating functionality (unknown)
+#   :-- Input types [csv,sql,(l0|O)phcrack,JTR,XLS] (binary files)
+#     :-- Check file Magic # to determine type (Compressed|Zipped|Word|Imposters)
+#   :-- Table inspector (Deterministic on cost**time * effort / willingness for public release)
 ###############################################################################
 require 'zlib'
 require 'tar/reader'
 require 'digest'
 require 'ipaddr'
-require 'fileutils'
 require 'securerandom'
 require 'optparse'  # ensure module is included with the script
 require 'ostruct'  # ensure module is included with the script
@@ -36,27 +40,17 @@ def userargs
    opt.on('-i','--input FILE/FOLDER','location of file(s) to process') { |o|
     $options[:input] = o }  # create files in directory given by user, default if not given
    opt.on('-e','--explode','Explode contents of "tar.gz" files to disk') { |o|
-    $options[:explode] = o }  # create files in directory given by user, default if not given
+    $options[:explode] = o }  # create files from compressed file in directory given by user, default if not given
    opt.on('-o','--output{=FOLDERNAME}','Location on disk to store contents generated') { |o|
     $options[:folder] = o }  # location (folder) where to store the generated output
    opt.on('-d','--debug','Enables debugging information to be displayed, performance hit') { |o|
-    $options[:debug] = o }  # username from arguments @ cli
+    $options[:debug] = o }  # enabled debugging output, performance hit
    opt.on('-v','--verbose','Adds additional information to STDOUT, performance hit increases') { |o|
-    $options[:verbose] = o }  # adds additional debugging information to STDOUT
+    $options[:verbose] = o }  # adds additional debugging information to STDOUT, greater performance hit
   end.parse!  # Stop parsing options from user @ cli
- rescue => optparseerr  # catch error to va
-  puts "\t\t[ERROR]:: OptionsParser fault: #{optparseerr}" if $diag # if diag true, display error
+ rescue => someerror  # catch error to var
+  puts "[ERROR]:: OptionsParser fault: #{someerror}"
  end  # Catch/Rescue block end
-end
-if $diag
- puts "[OPTIONS]:: Input: #{$options[:type]}"
- puts "[OPTIONS]:: Input: #{$options[:input]}"
- puts "[OPTIONS]:: Input: #{$options[:explode]}"
- puts "[OPTIONS]:: Input: #{$options[:folder]}"
- puts "[OPTIONS]:: Input: #{$options[:debug]}"
- puts "[OPTIONS]:: Input: #{$options[:verbose]}"
-else
- puts "[OPTIONS]:: PASSED"
 end
 # [banvars] ######################################################################
 ct  = "\x09\x09\x5b\x43\x6f\x64\x65\x4e\x61\x6d\x65\x5d\x3a\x09\x43\x6f"
@@ -79,59 +73,70 @@ ai  = "\x2e\x63\x30\x4d\x4d\x4d\x4d\x4d\x4d\x4d\x57\x4b\x6b\x6c\x27"
 ai  = "\x6f\x57\x4d\x57\x6f"
 aj  = "\x2e\x6b\x4d\x4d\x4b\x3b"
 ak  = "\x2e\x6c\x4b\x4d\x4d\x4e\x78\x78\x78\x78\x64\x6f\x3a\x27"
+s   = "\x20" 
+h   = "-"
 # [banner] ####################################################################
 banner = []  # Create the banner
-banner.append('-'*80)
-banner.append("\x20"*5+"lXMMXk:."+"\x20"*51+",Kx,")
-banner.append("\x20"*7+".ckNMMNx:."+"\x20"*47+":0MMK;")
-banner.append("\x20"*11+"'lOWMMKd,"+"\x20"*46+"'0MMx")
-banner.append("\x20"*15+",oKMMM0l'"+"\x20"*36+".'."+"\x20"*5+"xMMd")
-banner.append("\x20"*18+".;dKMMWOl'"+"\x20"*22+af+"\x20"*6+"0M.\\")
-banner.append("\x20"*23+".;xXMMWOc."+"\x20"*17+aa)
-banner.append("\x20"*25+",xWMM0c."+"\x20"*15+",:'.'.'.."+"\x20"*3+ag)
-banner.append("\x20"*22+"'dNMMKl."+"\x20"*28+"lWMX."+"\x20"*7+"odooddd:")
-banner.append("\x20"*18+"'dNMMKl."+"\x20"*28+".cKMMk"+"\x20"*8+"kMMc"+"\x20"*1+".odok:")
-banner.append("\x20"*15+",dXMM0l."+"\x20"*21+".:c;;;:lxKMMNd."+"\x20"*7+";XMWl"+"\x20"*5+"ldlk.")
-banner.append("\x20"*12+",xNMM0c."+"\x20"*21+ah+"\x20"*6+".;dNMMk."+"\x20"*7+".klk;")
-banner.append("\x20"*9+"'dNMMKl."+"\x20"*21+".c0MMWx,"+"\x20"*1+"..."+"\x20"*3+ak+"\x20"*12+"klO,")
-banner.append("\x20"*7+",KMMKl."+"\x20"*22+":OMMWk;"+"\x20"*7+ak+"\x20"*16+"O:0.")
-banner.append("\x20"*7+"dMM0'"+"\x20"*21+".cOWMNx;"+"\x20"*6+".'dKMMXd'"+"\x20"*25+".0ck")
-banner.append("\x20"*5+";MMO"+"\x20"*20+".c0MMNx,"+"\x20"*7+"'dNMMXo."+"\x20"*30+"llO'")
-banner.append("\x20"*6+"dMM,"+"\x20"*17+".cOMMWk,"+"\x20"*7+"'oXMMXo."+"\x20"*32+".Kcd")
-banner.append("\x20"*6+"lMMl"+"\x20"*17+"dWMMK."+"\x20"*6+".oXMMXo."+"\x20"*36+"k:K")
-banner.append("\x20"*6+".XMW;"+"\x20"*17+".xWMWo"+"\x20"*3+"lXMMXo'"+"\x20"*39+":ok'")
-banner.append("\x20"*7+".kMM0;"+"\x20"*17+".dWMWd"+"\x20"*2+"dWMNl"+"\x20"*40+".0cl")
-banner.append("\x20"*9+aj+"\x20"*18+"oWMWx."+"\x20"*1+ai+"\x20"*38+"0:0")
-banner.append("\x20"*10+".kMMK;"+"\x20"*18+"oWMWx."+"\x20"*1+ai+"\x20"*37+"oc0.")
-banner.append("\x20"*12+".kMMK;"+"\x20"*18+"oWMWx."+"\x20"*1+ai+"\x20"*35+".0cd")
-banner.append("\x20"*14+".xWMX:"+"\x20"*18+"lNMWx."+"\x20"*1+"lNMWd."+"\x20"*33+"dlO'")
-banner.append("\x20"*16+".xWMNc"+"\x20"*18+"cNMMk."+"\x20"*1+"cNMMk."+"\x20"*32+"Ock;")
-banner.append("\x20"*18+".xWMNc"+"\x20"*18+"cNMMk."+"\x20"*1+":KMMk."+"\x20"*31+"odddc,..")
-banner.append("\x20"*20+".xWMNc"+"\x20"*18+"cNMMk'"+"\x20"*1+";KMMk."+"\x20"*30+".lldxxx.")
-banner.append("\x20"*22+".xWMNc"+"\x20"*18+"cNMM0,"+"\x20"*1+";KMMk."+"\x20"*32+"..'")
-banner.append("\x20"*24+".dWMNl"+"\x20"*18+":KMM0;"+"\x20"*1+";0MMO'")
-banner.append("\x20"*27+ai+"\x20"*18+",0MMK,"+"\x20"*1+",0MM0,")
-banner.append("\x20"*29+ai+"\x20"*18+",0MMx"+"\x20"*1+",0MM0,")
-banner.append("\x20"*31+ai+"\x20"*18+"xMMo"+"\x20"*3+",0MM0.")
-banner.append("\x20"*33+"lNMWd."+"\x20"*16+"WMK"+"\x20"*5+",XMW'")
-banner.append("\x20"*35+"cNMWx."+"\x20"*13+".WMK"+"\x20"*6+"'MM0"+ct)
-banner.append("\x20"*37+"cNMWx."+"\x20"*10+".0MM:"+"\x20"*7+"XMX"+pt)
-banner.append("\x20"*39+"cNMWx'"+"\x20"*6+".oNMW:"+"\x20"*7+";MMk"+gt)
-banner.append("\x20"*42+ac+"\x20"*7+"lWMX.")
-banner.append("\x20"*44+ad)
-banner.append("\x20"*53+ae)
-banner.append('-'*80)
-banner.append('[INITIALIZER]:: Application initialized')
-banner.append('')
+banner.append(h*80)
+banner.append(s*5+"lXMMXk:."+s*51+",Kx,")
+banner.append(s*7+".ckNMMNx:."+s*47+":0MMK;")
+banner.append(s*11+"'lOWMMKd,"+s*46+"'0MMx")
+banner.append(s*15+",oKMMM0l'"+s*36+".'."+s*5+"xMMd")
+banner.append(s*18+".;dKMMWOl'"+s*22+af+s*6+"0M.\\")
+banner.append(s*23+".;xXMMWOc."+s*17+aa)
+banner.append(s*25+",xWMM0c."+s*15+",:'.'.'.."+s*3+ag)
+banner.append(s*22+"'dNMMKl."+s*28+"lWMX."+s*7+"odooddd:")
+banner.append(s*18+"'dNMMKl."+s*28+".cKMMk"+s*8+"kMMc"+s*1+".odok:")
+banner.append(s*15+",dXMM0l."+s*21+".:c;;;:lxKMMNd."+s*7+";XMWl"+s*5+"ldlk.")
+banner.append(s*12+",xNMM0c."+s*21+ah+s*6+".;dNMMk."+s*7+".klk;")
+banner.append(s*9+"'dNMMKl."+s*21+".c0MMWx,"+s*1+"."*3+s*3+ak+s*12+"klO,")
+banner.append(s*7+",KMMKl."+s*22+":OMMWk;"+s*7+ak+s*16+"O:0.")
+banner.append(s*7+"dMM0'"+s*21+".cOWMNx;"+s*6+".'dKMMXd'"+s*25+".0ck")
+banner.append(s*5+";MMO"+s*20+".c0MMNx,"+s*7+"'dNMMXo."+s*30+"llO'")
+banner.append(s*6+"dMM,"+s*17+".cOMMWk,"+s*7+"'oXMMXo."+s*32+".Kcd")
+banner.append(s*6+"lMMl"+s*17+"dWMMK."+s*6+".oXMMXo."+s*36+"k:K")
+banner.append(s*6+".XMW;"+s*17+".xWMWo"+s*3+"lXMMXo'"+s*39+":ok'")
+banner.append(s*7+".kMM0;"+s*17+".dWMWd"+s*2+"dWMNl"+s*40+".0cl")
+banner.append(s*9+aj+s*18+"oWMWx."+s*1+ai+s*38+"0:0")
+banner.append(s*10+".kMMK;"+s*18+"oWMWx."+s*1+ai+s*37+"oc0.")
+banner.append(s*12+".kMMK;"+s*18+"oWMWx."+s*1+ai+s*35+".0cd")
+banner.append(s*14+".xWMX:"+s*18+"lNMWx."+s*1+"lNMWd."+s*33+"dlO'")
+banner.append(s*16+".xWMNc"+s*18+"cNMMk."+s*1+"cNMMk."+s*32+"Ock;")
+banner.append(s*18+".xWMNc"+s*18+"cNMMk."+s*1+":KMMk."+s*31+"odddc,..")
+banner.append(s*20+".xWMNc"+s*18+"cNMMk'"+s*1+";KMMk."+s*30+".lldxxx.")
+banner.append(s*22+".xWMNc"+s*18+"cNMM0,"+s*1+";KMMk."+s*32+"..'")
+banner.append(s*24+".dWMNl"+s*18+":KMM0;"+s*1+";0MMO'")
+banner.append(s*27+ai+s*18+",0MMK,"+s*1+",0MM0,")
+banner.append(s*29+ai+s*18+",0MMx"+s*1+",0MM0,")
+banner.append(s*31+ai+s*18+"xMMo"+s*3+",0MM0.")
+banner.append(s*33+"lNMWd."+s*16+"WMK"+s*5+",XMW'")
+banner.append(s*35+"cNMWx."+s*13+".WMK"+s*6+"'MM0"+ct)
+banner.append(s*37+"cNMWx."+s*10+".0MM:"+s*7+"XMX"+pt)
+banner.append(s*39+"cNMWx'"+s*6+".oNMW:"+s*7+";MMk"+gt)
+banner.append(s*42+ac+s*7+"lWMX.")
+banner.append(s*44+ad)
+banner.append(s*53+ae)
+banner.append(h*80)
 # [initial] ###################################################################
 def initial
+ puts "[INITIALIZER]:: Application initialized"
  $directory_name = "evidence"
- puts "[INITIAL]:: Entering"+(if $verb; "\t[INITIAL]:: Default DIR name: #{$directory_name}"; end) if $diag
+ puts "[INITIAL]:: Entering"+(if $verb; "[INITIAL]:: Default DIR name: #{$directory_name}"; end) if $diag
  begin
-  if $options[:debug]; $diag = true; else; $diag = false; end  # Accept user argument for debugging
-  if $options[:verbose]; $verb = true; else; $verb = false; end  # Accept user argument for debugging in verbose mode
-  puts "[INITIAL]:: Initial debugging options set"+
-   (if $verb; "\n[INITIAL]:: debug: #{$diag}\n[INITIAL]:: verbose: #{$verb}"; else ""; end) if $diag
+  begin
+    if $options[:debug]; $diag = true; puts "[OPTIONS]:: OptionsParser: PASSED"; else; $diag = false; end  # Accept user argument for debugging
+    if $options[:verbose]; $verb = true;  # Accept user argument for debugging in verbose mode
+     puts "[OPTIONS]:: Debug: #{$diag}"; puts "[OPTIONS]:: Verbose: #{$verb}"
+     puts "[OPTIONS]:: Explode: #{$options[:explode]}" if $options[:explode].to_s != ""
+     puts "[OPTIONS]:: Input: #{$options[:input].to_s}" if $options[:input].to_s != ""
+     puts "[OPTIONS]:: Folder: #{$options[:folder].to_s}" if $options[:folder].to_s != ""
+     puts "[OPTIONS]:: Type: #{$options[:type].to_s}" if $options[:type].to_s != "" 
+    else; $verb = false;
+    end
+  rescue => someerror  # catch error to va
+   puts "[ERROR]:: Debugger/Verbose failed: #{someerror}"; exit
+  end  # Catch/Rescue block end
+  puts "[INITIAL]:: Initial debugging options set"
   $inilist = {:badstart => [],:quoted => [],:semi => [],:colon => [], 
   :pipe => [],:nosplit => [],:email => [],:unknown => [], 
   :tabbed => [],:cleaned => [],:upwd => [],:badconvert => []}  # Create the default hash to be used in the application
@@ -193,7 +198,7 @@ def ingestion
  begin
   (if $verb; puts "[CONSUME]:: Testing if input is a directory"; else ""; end) if $diag
   if File.directory? $options[:input].to_s
-   puts "[CONSUME]:: Initial input location used"+(if $verb; "\n[CONSUME]:: input: #{$options[:input]}"; else ""; end) if $diag
+   puts "[CONSUME]:: Initial input location used"+(if $verb; ": #{$options[:input]}"; else ""; end) if $diag
    begin
     puts "[CONSUME]:: Searching directory for #{$options[:type].to_s.upcase} files:" if $diag
     foname = $options[:input]
@@ -213,14 +218,14 @@ def ingestion
    rescue => someerror
     puts "[CONSUME]:: FATAL ERROR:: ingestion module"+(if $verb; ": #{someerror}"; else ""; end) if $diag;
    end
-   (if $verb; puts "[CONSUME]:: Input was a directory"; else ""; end) if $diag
+   (if $verb; puts "[CONSUME]:: Input was a directory"; end) if $diag
   end
-  (if $verb; puts "[CONSUME]:: Testing if input is a file"; else ""; end) if $diag
+  (if $verb; puts "[CONSUME]:: Testing if input is a file"; end) if $diag
   if File.file? $options[:input].to_s
    # If user input was of a file. include singlular file
    $filesin.append($options[:input].to_s)
    puts "[CONSUME]:: Single"+(if $verb; ": #{$options[:type].to_s.upcase}"; else ""; end)+" file being processed"+(if $verb; ": #{$options[:input].to_s}"; else ""; end)
-   (if $verb; puts "[CONSUME]:: Input was a file"; else ""; end) if $diag
+   (if $verb; puts "[CONSUME]:: Input was a file"; end) if $diag
   end
   return # Return the generated list of files for additional processing
  rescue => someerror
@@ -292,7 +297,7 @@ end
 # [tarpit] ####################################################################
 def tarpit(infile)
  begin
-  puts "[TARPIT]:: Entering" if $diag
+  puts "[TARPIT]:: Entering"+(if $verb; ": #{infile}"; else ""; end) if $diag
   Tar::Reader.new( Zlib::GzipReader.open(infile)).each { |fzile|
    sticky = []  # default content list may change inn future
    (if $verb; puts "[TARPIT]:: Entry list set :#{sticky.length}"; else "0"; end) if $diag
@@ -322,7 +327,7 @@ end
 # [gauntlet] ##################################################################
 def gauntlet(xstring)
  begin
-  puts "[GUANTLET]:: Entering" if $diag
+  puts "[GUANTLET]:: Entering"+(if $verb; ": #{xstring}"; else ""; end) if $diag
   $counter +=1  # Increment counter by 1
   (if $verb; puts "[GUANTLET]:: Counter incremented #{$counter}"; else "0"; end) if $diag
   estring = encoded(xstring)  # Attempt to encode string as needed in forgine dumps
@@ -342,7 +347,7 @@ end
  # [checkfirst] ################################################################
 def checkfirst(x)
  begin
-  puts "[VALIDATOR]:: Entering" if $diag
+  puts "[VALIDATOR]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
   if $speclist.include? x[0].to_s[0]  # Check if the leading character in entry is a Special Character
    puts "[VALIDATOR]:: Found lead character in speclist"+(if $verb; ": #{x}"; else ""; end) if $diag
    #  Check if first location after split is a valid email address or not
@@ -371,7 +376,7 @@ def checkfirst(x)
 end
 # [questions] ##################################################################
 def decider(x)
- puts "[DECIDER]:: Entering" if $diag
+ puts "[DECIDER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
  begin
   trigger = false # Set to 0 for initial process
   (if $verb; puts "[DECIDER]:: Default trigger: #{trigger}"; else ""; end) if $diag
@@ -401,7 +406,7 @@ end
 # [questions] ##################################################################
 def questions(x)
  begin
-  puts "[QUESTION]:: Entering" if $diag
+  puts "[QUESTION]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
   if x[0].to_s[0] == '?'  # Check if the leading character is a questionmark
    puts "[QUESTION]:: First character is a questionmark"+(if $verb; ": #{x}"; else ""; end) if $diag
    x = x.strip()  # Attempt to strip any newline character from end of entry
@@ -439,7 +444,7 @@ end
  # [encoded] ##################################################################
 def encoded(plainstring)
  begin
-  puts "[ENCODEX]:: Entering" if $diag
+  puts "[ENCODEX]:: Entering"+(if $verb; ": #{plainstring}"; else ""; end) if $diag
   begin
    # Attempt to remove newline characters from entry and return results
    encodedstring = plainstring.strip()  # Removes newline character with standard ruby strip
@@ -480,7 +485,7 @@ end
 # [lenrun] ####################################################################
 def lenrun(char, x)
  begin
-  puts "[LENRUN]:: Entering" if $diag
+  puts "[LENRUN]:: Entering"+(if $verb; ": #{char}, #{x}"; else ""; end) if $diag
   if x.split(char).length >= 2  # If split results in a length of 2 or more
    puts "[LENRUN]:: Passed length requirement"+(if $verb; ":#{x.split(char).length}"; else ""; end) if $diag
    if x.split(char).length == 2  # If split is exact length, process further and validate entries
@@ -512,10 +517,10 @@ def lenrun(char, x)
    $data[:cleaned].append($newx)  # Append newx to cleaned list of known good sets
    puts "[LENRUN]:: Append newx to clean list"+(if $verb; ": #{$newx}"; else ""; end) if $diag
    # Attempt to have entry parsed into respective entry list
-   if char.to_s == "\t"; if tabsplit($newx) == true; puts "[LENRUN]:: TAB2 - #{$newx} #{$counter}" if $diag; return true; end; end
-   if char.to_s == ":"; if colonsplit($newx) == true; puts "[LENRUN]:: COLON - #{$newx} #{$counter}" if $diag; return true; end; end
-   if char.to_s == ";"; if semisplit($newx) == true; puts "[LENRUN]:: SEMI - #{$newx} #{$counter}" if $diag; return true; end; end
-   if char.to_s == "|"; if pipesplit($newx) == true; puts "[LENRUN]:: PIPE - #{$newx} #{$counter}" if $diag; return true; end; end
+   if char.to_s == "\t"; if tabsplit($newx) == true;   puts "[LENRUN]:: TABBED - #{$newx} #{$counter}" if $diag; return true; end; end
+   if char.to_s == ":";  if colonsplit($newx) == true; puts "[LENRUN]:: COLON - #{$newx} #{$counter}" if $diag; return true; end; end
+   if char.to_s == ";";  if semisplit($newx) == true;  puts "[LENRUN]:: SEMI - #{$newx} #{$counter}" if $diag; return true; end; end
+   if char.to_s == "|";  if pipesplit($newx) == true;  puts "[LENRUN]:: PIPE - #{$newx} #{$counter}" if $diag; return true; end; end
   else  # if entry does not quantify into its repsective list, add entry to unkwown list
    unknown(x)
    puts "[LENRUN]:: NO VALID FORMATS FOUND: #{x} #{$counter}" if $diag
@@ -529,7 +534,7 @@ def lenrun(char, x)
 end
 # [quoted] ##################################################################
 def quoted(x)  # Checks if entry is quoted of not
- puts "[QUOTED]:: Entering" if $diag
+ puts "[QUOTED]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
  begin
   if x[0].to_s[0] == '"'
 	 puts "[QUOTED]:: Append to Quoted list" if $diag
@@ -543,7 +548,7 @@ end
 # [makehash] ##################################################################
 def makehash(datain)  # Returns a MD5 hash of given dataset
  begin
-  puts "[MAKEHASH]:: Entering" if $diag
+  puts "[MAKEHASH]:: Entering"+(if $verb; ": #{datain}"; else ""; end) if $diag
   newhash = $md5.update(datain).hexdigest
   puts "[MAKEHASH]:: New hash"+(if $verb; ": #{newhash}"; else ""; end) if $diag
   $md5.reset  # Reset for any additional use after completion

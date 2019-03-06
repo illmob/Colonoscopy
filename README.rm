@@ -75,7 +75,7 @@ What is the theory being Colonoscopy?
 
 Example of application options
 
-  Usage: pwdsort [options]
+  Usage: Colonoscopy [options]
       -t, --type TYPE                  Consume all files of type ["TXT","GZ"] in a directory
       -i, --input FILE/FOLDER          location of file(s) to process
       -e, --explode                    Explode contents of "tar.gz" files to disk

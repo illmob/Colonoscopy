@@ -1,6 +1,6 @@
 # [DEVELOPER] #################################################################
 #
-# illnmob, cause you didn't even try to make it
+# illmob, cause you didn't even try to make it
 #
 # [requirements] ##############################################################
 #

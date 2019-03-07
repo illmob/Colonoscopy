@@ -22,16 +22,21 @@
 #     :-- Check file Magic # to determine type (Compressed|Zipped|Word|Imposters)
 #   :-- Table inspector (Deterministic on cost**time * effort / willingness for public release)
 ###############################################################################
-require 'zlib'
-require 'tar/reader'
-require 'digest'
-require 'ipaddr'
-require 'securerandom'
-require 'optparse'  # ensure module is included with the script
-require 'ostruct'  # ensure module is included with the script
-require 'iconv' unless String.method_defined?(:encode)
-#[User Arguments] ##############################] User Args [###########################################################
+require 'zlib'          # ensure module is included with the script
+require 'tar/reader'    # ensure module is included with the script
+require 'digest'        # ensure module is included with the script
+require 'ipaddr'        # ensure module is included with the script
+require 'securerandom'  # ensure module is included with the script
+require 'optparse'      # ensure module is included with the script
+require 'ostruct'       # ensure module is included with the script
+require 'iconv' unless String.method_defined?(:encode)  # ensure module is included with the script
+#[userargs] ##############################] userargs [###########################################################
 def userargs
+ #
+ # Portion to interact with user at commandline. Processes users arguments and aligns them within an options hash
+ # These options are globally avalilable, and are not mutable. The can be overwritten so be sure to save the contents
+ # rather than attempting to read directly from the has itself.
+ #
  begin  # Catch/Rescue block start
   $options = OpenStruct.new  # create a new OpenStruct object
   OptionParser.new do |opt|
@@ -47,12 +52,16 @@ def userargs
     $options[:debug] = o }  # enabled debugging output, performance hit
    opt.on('-v','--verbose','Adds additional information to STDOUT, performance hit increases') { |o|
     $options[:verbose] = o }  # adds additional debugging information to STDOUT, greater performance hit
+   opt.on('-s','--sleep{=TIME}','Adds pause to decrease STDOUT flooding, performance hit increases') { |o|
+    $options[:sleep] = o }  # adds additional debugging information to STDOUT, greater performance hit
   end.parse!  # Stop parsing options from user @ cli
  rescue => someerror  # catch error to var
   puts "[ERROR]:: OptionsParser fault: #{someerror}"
  end  # Catch/Rescue block end
 end
 # [banvars] ######################################################################
+# Banner code needed to compelte the production of the applications graphic 
+#
 ct  = "\x09\x09\x5b\x43\x6f\x64\x65\x4e\x61\x6d\x65\x5d\x3a\x09\x43\x6f"
 ct += "\x6c\x6f\x6e\x6f\x73\x63\x6f\x70\x79"
 pt  = "\x09\x09\x5b\x50\x72\x6f\x64\x75\x63\x65\x64\x5d\x3a\x09\x69\x6c"
@@ -76,6 +85,8 @@ ak  = "\x2e\x6c\x4b\x4d\x4d\x4e\x78\x78\x78\x78\x64\x6f\x3a\x27"
 s   = "\x20" 
 h   = "-"
 # [banner] ####################################################################
+# Append lines to an array and proceed with stacking as needed to produce output when called.
+#
 banner = []  # Create the banner
 banner.append(h*80)
 banner.append(s*5+"lXMMXk:."+s*51+",Kx,")
@@ -117,77 +128,116 @@ banner.append(s*42+ac+s*7+"lWMX.")
 banner.append(s*44+ad)
 banner.append(s*53+ae)
 banner.append(h*80)
-# [initial] ###################################################################
+#[initial] ##############################] initial [###########################################################
 def initial
+ #
+ # Initial function to handle the assignment of user supplied arguments with application variabled
+ #
  puts "[INITIALIZER]:: Application initialized"
  $directory_name = "evidence"
- puts "[INITIAL]:: Entering"+(if $verb; "[INITIAL]:: Default DIR name: #{$directory_name}"; end) if $diag
+ puts "[INITIAL]:: Entering"+(sleep $pause; if $verb; "[INITIAL]:: Default DIR name: #{$directory_name}"; end) if $diag
  begin
+  $inilist    = {:badstart => [],:quoted => [],:semi => [],:colon => [], 
+                :pipe => [],:nosplit => [],:email => [],:unknown => [], 
+                :tabbed => [],:cleaned => [],:upwd => [],:badconvert => [],
+                :weburl => []}  # Create the default hash to be used in the application
+  $speclist   = ["!", '"', "#", "$","%", "&", "'", "(", ")", "*",
+                "+", ",","-", ".", "/", ":", ";", "<", "=", ">","?", "\,", "\\"]  # Create the default Special char list
+  $skipfiles  = [".",".."]  # file locations to ignore
+  $splitchar  = [":",";","|","\t"]  # characters known to split on
+  $nillist    = ["0", "0.0", "", nil]
+  $web        = ["http","https"]
+  $dumpall    = false
   begin
-    if $options[:debug]; $diag = true; puts "[OPTIONS]:: OptionsParser: PASSED"; else; $diag = false; end  # Accept user argument for debugging
-    if $options[:verbose]; $verb = true;  # Accept user argument for debugging in verbose mode
-     puts "[OPTIONS]:: Debug: #{$diag}"; puts "[OPTIONS]:: Verbose: #{$verb}"
-     puts "[OPTIONS]:: Explode: #{$options[:explode]}" if $options[:explode].to_s != ""
-     puts "[OPTIONS]:: Input: #{$options[:input].to_s}" if $options[:input].to_s != ""
-     puts "[OPTIONS]:: Folder: #{$options[:folder].to_s}" if $options[:folder].to_s != ""
-     puts "[OPTIONS]:: Type: #{$options[:type].to_s}" if $options[:type].to_s != "" 
-    else; $verb = false;
+   if $options[:debug]; $diag = true; puts "[OPTIONS]:: OptionsParser: PASSED"
+   else; $diag = false 
+   end  # Accept user argument for debugging
+   if $options[:verbose]; $verb = true;  # Accept user argument for debugging in verbose mode
+    puts "[OPTIONS]:: Debug: #{$diag}"; puts "[OPTIONS]:: Verbose: #{$verb}"
+    puts "[OPTIONS]:: Explode: #{$options[:explode]}" if $options[:explode].to_s != ""
+    puts "[OPTIONS]:: Input: #{$options[:input].to_s}" if $options[:input].to_s != ""
+    puts "[OPTIONS]:: Folder: #{$options[:folder].to_s}" if $options[:folder].to_s != ""
+    puts "[OPTIONS]:: Type: #{$options[:type].to_s}" if $options[:type].to_s != "" 
+   else; $verb = false;
+   end
+   $pause = Float("0.0") 
+   if $diag || $verb
+    if ! $nillist.include? $options[:sleep]
+     begin
+      if $options[:sleep].split(".").length == 2
+       begin
+        pp $options[:sleep].split(".")
+        $pause = Float($options[:sleep]) 
+       rescue =>  someerror
+        puts "[ERROR]:: Sleep options failed integer testing"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+        $pause = Float("0.0")
+       end
+      else
+       begin
+        set1 = $options[:sleep].to_i
+        $pause = set1
+       rescue =>  someerror
+        puts "[ERROR]:: Sleep options failed integer testing"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+       end
+      end
+      puts "[OPTIONS]:: Type: #{$options[:type].to_s}" if $options[:type].to_s != ""
+     rescue =>  someerror
+      puts "[ERROR]:: Sleep options failed integer testing, using default"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+      $pause = 0
+     end
     end
+   end
+   # Adds sleep to the output for easieir human consumption
   rescue => someerror  # catch error to va
    puts "[ERROR]:: Debugger/Verbose failed: #{someerror}"; exit
   end  # Catch/Rescue block end
-  puts "[INITIAL]:: Initial debugging options set"
-  $inilist = {:badstart => [],:quoted => [],:semi => [],:colon => [], 
-  :pipe => [],:nosplit => [],:email => [],:unknown => [], 
-  :tabbed => [],:cleaned => [],:upwd => [],:badconvert => []}  # Create the default hash to be used in the application
-  $speclist = ["!", '"', "#", "$","%", "&", "'", "(", ")", "*",
-  "+", ",","-", ".", "/", ":", ";", "<", "=", ">","?", "\,", "\\"]  # Create the default Special char list
-  $skipfiles = [".",".."]  # file locations to ignore
-  $splitchar = [":",";","|","\t"]  # characters known to split on
-  puts "[INITIAL]:: Default HASH and Special Char list created"
-  (if $verb; puts "[INITIAL]:: inilist length: #{$inilist.length}"; else ""; end) if $diag
-  (if $verb; puts "[INITIAL]:: speclist length: #{$speclist.length}"; else ""; end) if $diag
+  puts "[INITIAL]:: Initial debugging options set" if $diag
+  puts "[INITIAL]:: Default HASH and Special Char list created" if $diag
   $compdata = ""  # Set global var
-  (if $verb; puts"[INITIAL]:: Default compdata #{$compdata}"; else ""; end) if $diag
-  $md5 = Digest::MD5.new  # Set global call for MD5 hash
   $counter = 0  #Set counter to 0
-  (if $verb; puts"[INITIAL]:: Default counter #{$counter}"; else ""; end) if $diag
   $wsize = 500000  # Set write size check to half million lines
-  (if $verb; puts"[INITIAL]:: Default wsize #{$wsize}"; else ""; end) if $diag
   $filesin = []  # Set default list of files to be injested
-  (if $verb; puts"[INITIAL]:: Default filesin #{$filesin}"; else ""; end) if $diag
-  (if $verb; puts"[INITIAL]:: Default options[:folder] #{$options[:folder]}"; else ""; end) if $diag
-  if $options[:folder].to_s != ""; $directory_name = $options[:folder]; end
-  #else; $directory_name = projname($options[:input].to_s); end  # Set default evidence directory
-  puts "[INITIAL]:: Creating evidence directory"+(if $verb; ": #{$directory_name}"; else ""; end) if $diag
+  if $options[:folder].to_s != ""; $directory_name = $options[:folder]; else; $directory_name = projname($options[:input].to_s); end  # Set default evidence directory
+  if $diag && $verb 
+   puts "[INITIAL]:: inilist length: #{$inilist.length}"
+   puts "[INITIAL]:: speclist length: #{$speclist.length}"
+   puts "[INITIAL]:: splitchar length: #{$splitchar.length}"
+   puts "[INITIAL]:: skipfiles length: #{$skipfiles.length}"
+   puts "[INITIAL]:: Default compdata #{$compdata}"
+   puts "[INITIAL]:: Default counter #{$counter}"
+   puts "[INITIAL]:: Default wsize #{$wsize}"
+   puts "[INITIAL]:: Default filesin #{$filesin}"
+   puts "[INITIAL]:: Default options[:folder] #{$options[:folder]}"
+   puts "[INITIAL]:: Creating evidence directory"+(sleep $pause; ": #{$directory_name}")
+  end
   Dir.mkdir($directory_name) unless Dir.exists?($directory_name) # Create DIR if it does not exists
   puts "[INITIAL]:: Exiting" if $diag
 rescue => someerror
-  puts "[INITIAL]:: FATAL ERROR:: initial module"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[INITIAL]:: FATAL ERROR:: initial module"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
-# [mainfun] ###################################################################
+#[mainfun] ##############################] mainfun [###########################################################
 def mainfun
  begin
   puts "[MAINFUN]:: Entering\n[MAINFUN]:: Setting application variables for filenames" if $diag
   ingestion  # Gather files to be processes from ingestion function
-  puts "[MAINFUN]:: Examining files"+(if $verb; ": #{$filesin}"; else ""; end) if $diag
+  puts "[MAINFUN]:: Examining files"+(sleep $pause; if $verb; ": #{$filesin}"; else ""; end) if $diag
   $filesin.each { | finfile |
-   puts "[MAINFUN]:: Interacting with file: #{finfile}" if $diag
+   puts "[MAINFUN]:: Interacting with file"+(sleep $pause; if $verb; ": #{$finfile}"; else ""; end) if $diag
    procfiles(finfile)  # Process files to generate additional global vars
    if finfile.split(".")[-1].to_s.downcase == "txt"
     puts "[MAINFUN]:: Input file is TXT" if $diag
     inoutput(finfile)  # If file is of type TXT, process singular files contents
    end
    if finfile.split(".")[-1].to_s.downcase == "gz"
-    puts "[MAINFUN]:: Input file is GZ" if $diag
+    puts "[MAINFUN]:: Input file is GZ"+(sleep $pause; if $verb; ": #{$finfile}"; else ""; end) if $diag
     tarpit(finfile)  # If file is of type GZ, inflate and process singular files contents
    end
    bufferflush  # Proceed to flush any contents that did not hit write counter limits
   }
   puts "[MAINFUN]:: Exiting" if $diag
  rescue  => someerror
-  puts "[MAINFUN]:: FATAL ERROR:: mainfun module"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[MAINFUN]:: FATAL ERROR:: mainfun module"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [ingestion] #################################################################
@@ -198,25 +248,25 @@ def ingestion
  begin
   (if $verb; puts "[CONSUME]:: Testing if input is a directory"; else ""; end) if $diag
   if File.directory? $options[:input].to_s
-   puts "[CONSUME]:: Initial input location used"+(if $verb; ": #{$options[:input]}"; else ""; end) if $diag
+   puts "[CONSUME]:: Initial input location used"+(sleep $pause; if $verb; ": #{$options[:input]}"; else ""; end) if $diag
    begin
     puts "[CONSUME]:: Searching directory for #{$options[:type].to_s.upcase} files:" if $diag
     foname = $options[:input]
-    puts "[CONSUME]:: User options given as input"+(if $verb; ": #{foname}"; else ""; end) if $diag
+    puts "[CONSUME]:: User options given as input"+(sleep $pause; if $verb; ": #{foname}"; else ""; end) if $diag
     Dir.entries(foname).each { | fin | 
      if $skipfiles.include? fin.to_s
-      puts "[CONSUME]:: Skipped a file from being procesed"+(if $verb; ": #{fin.to_s}"; else ""; end) if $diag
+      puts "[CONSUME]:: Skipped a file from being procesed"+(sleep $pause; if $verb; ": #{fin.to_s}"; else ""; end) if $diag
       next
      end
      if fin.split(".")[-1].to_s.downcase == $options[:type].to_s.downcase
-      puts "[CONSUME]:: A file is being appended"+(if $verb; ": #{fin.to_s}"; else ""; end) if $diag
+      puts "[CONSUME]:: A file is being appended"+(sleep $pause; if $verb; ": #{fin.to_s}"; else ""; end) if $diag
       $filesin.append(fin.to_s)
       (if $verb; puts "[CONSUME]:: filesin: #{$filesin}"; else ""; end) if $diag
      end
     }  # If user input was of a directory, include all files @ set type
-    puts "[CONSUME]:: All files being processed"+(if $verb; ": #{$filesin}"; else ""; end) if $diag
+    puts "[CONSUME]:: All files being processed"+(sleep $pause; if $verb; ": #{$filesin}"; else ""; end) if $diag
    rescue => someerror
-    puts "[CONSUME]:: FATAL ERROR:: ingestion module"+(if $verb; ": #{someerror}"; else ""; end) if $diag;
+    puts "[CONSUME]:: FATAL ERROR:: ingestion module"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag;
    end
    (if $verb; puts "[CONSUME]:: Input was a directory"; end) if $diag
   end
@@ -224,35 +274,35 @@ def ingestion
   if File.file? $options[:input].to_s
    # If user input was of a file. include singlular file
    $filesin.append($options[:input].to_s)
-   puts "[CONSUME]:: Single"+(if $verb; ": #{$options[:type].to_s.upcase}"; else ""; end)+" file being processed"+(if $verb; ": #{$options[:input].to_s}"; else ""; end)
-   (if $verb; puts "[CONSUME]:: Input was a file"; end) if $diag
+   puts "[CONSUME]:: Single"+(sleep $pause; if $verb; ": #{$options[:type].to_s.upcase}"; else ""; end)+" file being processed"+(if $verb; ": #{$options[:input].to_s}"; else ""; end)
+   puts "[CONSUME]:: Input was a file"+(sleep $pause; if $verb; ": #{$options[:input].to_s}"; end) if $diag
   end
   return # Return the generated list of files for additional processing
  rescue => someerror
-  puts "[CONSUME]:: Please enter a file.txt or directory containing .gz files"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[CONSUME]:: Please enter a file.txt or directory containing .gz files"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
  puts "[CONSUME]:: Exiting" if $diag
 end
 # [projname] ##################################################################
 def projname(project)
  begin
-  puts "[PROJECT]:: Entering"+(if $verb; ": #{project}"; else ""; end) if $diag
-  if project.split(".") >= 2
+  puts "[PROJECT]:: Entering"+(sleep $pause; if $verb; ": #{project}"; else ""; end) if $diag
+  if project.split(".").length >= 2
    prepro = project.split(".")[-2]  # Split filename and store results
   else
-   prego = project
+    prepro = project
   end
-  puts "[PROJECT]:: Project name modified"+(if $verb; ": #{prepro}"; else ""; end) if $diag
+  puts "[PROJECT]:: Project name modified"+(sleep $pause; if $verb; ": #{prepro}"; else ""; end) if $diag
   prepro = prepro.split("/")[-1] if project.split("/").length >= 2  # Split directory and store results
-  (if $verb; puts "[PROJECT]:: prepro #{prepro}"; else ""; end) if $diag
+  (if $verb; puts "[PROJECT]:: Project name Split 1 #{prepro}"; else ""; end) if $diag
   prepro = prepro.split("\\")[-1] if project.split("\\").length >= 2  # Split directory and store results
-  (if $verb; puts "[PROJECT]:: prepro #{prepro}"; else ""; end) if $diag
+  (if $verb; puts "[PROJECT]:: Project name Split 2 #{prepro}"; else ""; end) if $diag
   projectname = prepro
-  puts "[PROJECT]:: Project name set"+(if $verb; ": #{projectname}"; else ""; end) if $diag
+  puts "[PROJECT]:: Project final name set"+(sleep $pause; if $verb; ": #{projectname}"; else ""; end) if $diag
  rescue => someerror
-  puts "[PROJECT]:: Failed to produce project name"+(if $verb; ": #{someerror}"; else ""; end) if $diag  # generate a new project name
+  puts "[PROJECT]:: Failed to produce project name"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag  # generate a new project name
   projectname = SecureRandom.alphanumeric
-  puts "[PROJECT]:: Generated project name"+(if $verb; ": #{someerror}"; else ""; end) if $diag  # generate a new project name
+  puts "[PROJECT]:: Generated project name"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag  # generate a new project name
  end
  puts "[PROJECT]:: Exiting" if $diag
  return projectname  # Return the project name for additional processing
@@ -260,123 +310,142 @@ end
 # [procfiles] ##################################################################
 def procfiles(infile)
  begin
-  puts "[PROCESS]:: Entering"+(if $verb; ": #{infile}"; else ""; end) if $diag
+  puts "[PROCESS]:: Entering"+(sleep $pause; if $verb; ": #{infile}"; else ""; end) if $diag
   project = projname(infile)  # Set porject name to generate file structure
-  puts "[PROCESS]:: Project: #{project}" if $diag
-  (if $verb; puts "[PROCESS]:: directory_name #{$directory_name}"; else ""; end) if $diag
+  puts "[PROCESS]:: Project passed from projname: #{project}" if $diag
+  (if $verb; puts "[PROCESS]:: directory_name: #{$directory_name}"; else ""; end) if $diag
   $base = File.join($directory_name, project)  # Set base DIR name to store files
-  puts "[PROCESS]:: Base location set"+(if $verb; ": #{$base}"; else ""; end) if $diag;
+  puts "[PROCESS]:: Base location set"+(sleep $pause; if $verb; ": #{$base}"; else ""; end) if $diag;
   begin
    Dir.mkdir($base) unless Dir.exists?($base)  # Create base DIR if it does not exists
-   puts "[PROCESS]:: File/Folder creation: PASSED"+(if $verb; ": #{$base}"; else ""; end) if $diag
+   puts "[PROCESS]:: File/Folder creation: PASSED"+(sleep $pause; if $verb; ": #{$base}"; else ""; end) if $diag
   rescue => someerror
-   puts "[PROCESS]:: File/Folder not created"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+   puts "[PROCESS]:: File/Folder not created"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
   end
  rescue => someerror
-  puts "[PROCESS]:: Failed to process project directories"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # generate files as needed
+  puts "[PROCESS]:: Failed to process project directories"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # generate files as needed
  end
  puts "[PROCESS]:: Exiting" if $diag
 end
 # [inoutput] ##################################################################
 def inoutput(infile)
  begin
-  puts "[IOREADER]:: Entering"+(if $verb; ": #{infile}"; else ""; end) if $diag
-  if not $options[:input].to_s == infile.to_s
-   newfile = File.join($options[:input].to_s, infile)
-  else
-   newfile = infile
+  puts "[IOREADER]:: Entering"+(sleep $pause; if $verb; ": #{infile}"; else ""; end) if $diag
+  if not $options[:input].to_s == infile.to_s; newfile = File.join($options[:input].to_s, infile)
+  else; newfile = infile
   end
   $data = $inilist  # Set default has to global variable
-  puts "[IOREADER]:: Datahash set to default"+(if $verb; ": #{$data}"; else ""; end) if $diag
-  IO.foreach(newfile){ | x | if gauntlet(x) == true; next;else;if $verb; puts "[IOREADER]:: skipped test case #{x}"; else ""; end; end }  # Process each line of file
+  puts "[IOREADER]:: Datahash set to default"+(sleep $pause; if $verb; ": #{$data.length}"; else ""; end) if $diag
+  IO.foreach(newfile){ | xnf | if gauntlet(xnf) == true; next; else; if $verb; puts "[IOREADER]:: skipped test case #{x}"; else ""; end; end }  # Process each line of file
  rescue => someerror
-  puts "[IOREADER]:: Failed to parse file"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading input file
+  puts "[IOREADER]:: Failed to parse file"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading input file
  end
  puts "[IOREADER]:: Exiting" if $diag
 end
 # [tarpit] ####################################################################
 def tarpit(infile)
  begin
-  puts "[TARPIT]:: Entering"+(if $verb; ": #{infile}"; else ""; end) if $diag
+  puts "[TARPIT]:: Entering"+(sleep $pause; if $verb; ": #{infile}"; else ""; end) if $diag
   Tar::Reader.new( Zlib::GzipReader.open(infile)).each { |fzile|
    sticky = []  # default content list may change inn future
    (if $verb; puts "[TARPIT]:: Entry list set :#{sticky.length}"; else "0"; end) if $diag
    $data = $inilist  # Set default has to global variable
    (if $verb; puts "[TARPIT]:: Default datahash set: #{$data.length}"; else "0"; end) if $diag
    puts "[TARPIT]:: #{fzile.header}" if $diag
-   if fzile.header.size.to_i == 0; next; end  # Skip entry if size is 0
+   if fzile.header.size.to_i == 0; next;  end  # Skip entry if size is 0
    compfile = fzile.header.name
    puts "[TARPIT]:: Compressed file: #{compfile}"
    compfilelen = fzile.header.size
    puts "[TARPIT]:: Commiting #{compfilelen} bytes to memory, please wait" if $diag
-   begin
-    fzile.read.each_line {|x| sticky.append(x)}  # Read contents of commpressed file and append to list
-   rescue
- 	  puts "[TARPIT]:: Finished processing #{compfile}" if $diag; break
+   # Read contents of commpressed file and append to list
+   begin; fzile.read.each_line {|xfzile| sticky.append(xfzile)}
+   rescue; puts "[TARPIT]:: Finished processing #{compfile}" if $diag;
    end
    puts "[TARPIT]:: Inflated data length: #{sticky.length}" if $diag
    puts "[TARPIT]:: Proceeding to Gauntlet" if $diag;
-   sticky.each { | x | if gauntlet(x) == true; next; end }  # Process each line of file
+   sticky.each { | xsticky | if gauntlet(xsticky) == true; next; end }  # Process each line of file
    puts "[TARPIT]:: Gauntlet  processing finished" if $diag
   }
- rescue => someerror
-  puts "[TARPIT]:: Failed to parse GZ file"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading gz contents file
+ rescue => someerror; puts "[TARPIT]:: Failed to parse GZ file"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading gz contents file
  end
  puts "[TARPIT]:: Exiting" if $diag
 end
 # [gauntlet] ##################################################################
-def gauntlet(xstring)
+def gauntlet(gstring)
  begin
-  puts "[GUANTLET]:: Entering"+(if $verb; ": #{xstring}"; else ""; end) if $diag
+  puts "[GUANTLET]:: Entering"+(sleep $pause; if $verb; ": #{gstring}"; else ""; end) if $diag
   $counter +=1  # Increment counter by 1
   (if $verb; puts "[GUANTLET]:: Counter incremented #{$counter}"; else "0"; end) if $diag
-  estring = encoded(xstring)  # Attempt to encode string as needed in forgine dumps
-  (if $verb; puts "[GUANTLET]:: Encoded entry: #{estring} of #{xstring}"; else ""; end) if $diag
-  if checkfirst(estring) == true; (if $verb; puts "[GUANTLET]:: Encoded: #{estring}"; end) if $diag; return true; 
-   else; puts "[ERROR]:: Guantlet failed checkfirst: #{xstring}" if $diag; end  # Process entry through module
-  if upwdsplit(estring) == true; (if $verb; puts "[GUANTLET]:: Encoded: #{estring}"; end) if $diag;; return true; 
-   else; puts "[ERROR]:: Guantlet failed upwdsplit: #{xstring}" if $diag; end  # Process entry through module if failed previous
-  if unknown(estring) == true; (if $verb; puts "[GUANTLET]:: Encoded: #{estring}"; end) if $diag;; return true; 
-   else; puts "[ERROR]:: Guantlet failed unknown: #{xstring}" if $diag; end  # Process entry through module if failed previous, final attempt EOF
- rescue => someerror
-  puts "[GUANTLET]:: Failed to run the guantlet"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading gz contents file
+  estring = encoded(gstring)  # Attempt to encode string as needed in forgine dumps
+  (if $verb; puts "[GUANTLET]:: Encoded entry: #{estring} of #{gstring}"; else ""; end) if $diag
+  if checkfirst(estring) == true; (if $verb; puts "[GUANTLET]:: Checkfirst PASSED: #{estring}"; end) if $diag; return true; 
+  else; puts "[ERROR]:: Guantlet failed unknown: #{gstring}" if $diag; end  # Process entry through module if failed previous, final attempt EOF
+  puts "[GUANTLET]:: Exiting" if $diag
+rescue => someerror; puts "[GUANTLET]:: Failed to run the guantlet"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading gz contents file
  end 
- puts "[GUANTLET]:: Exiting" if $diag
  return true  # Even if results are unknown return true
 end
  # [checkfirst] ################################################################
-def checkfirst(x)
+def checkfirst(checkstring)
  begin
-  puts "[VALIDATOR]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $speclist.include? x[0].to_s[0]  # Check if the leading character in entry is a Special Character
-   puts "[VALIDATOR]:: Found lead character in speclist"+(if $verb; ": #{x}"; else ""; end) if $diag
-   #  Check if first location after split is a valid email address or not
-   if not validemail(if x.split(":").length >= 2; x.split(":")[0]; end) ||
-    if not validemail(if x.split(";").length >= 2; x.split(";")[0]; end) ||
-     if not validemail(if x.split("|").length >= 2; x.split("|")[0]; end) ||
-      if not validemail(if x.split("\t").length >= 2; x.split("\t")[0]; end)
-       puts "[VALIDATOR]:: No valid email in the first set"+(if $verb; ": #{x}"; else ""; end) if $diag
-       quoted(x)  # Process entry to validate if the entry is quoted
-       questions(x)  # Process entry to validate if the entry has leading "?"
- 	    end
-      # Future use case, if they arrise
- 	   end
-     # Future use case, if they arrise
-    end
-    # Future use case, if they arrise
-   end
-   # Future use case, if they arrise
-  else
-   puts "[VALIDATOR]:: No valid email address found, sending to decider"+(if $verb; ": #{x}"; else ""; end) if $diag
-   decider(x)
+  if checkstring.length > 100
+   unknown(checkstring)
+   puts "[VALIDATOR]:: Exiting"+(sleep $pause; if $verb; ": #{checkstring}"; else ""; end) if $diag
+   return true
   end
- rescue => someerror
-  puts "[VALIDATOR]:: Failed to parse GZ file"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit  # reading gz contents file
+  puts "[VALIDATOR]:: Entering"+(sleep $pause; if $verb; " consuming: #{checkstring}"; else ""; end) if $diag
+  if $speclist.include? checkstring[0].to_s[0]  # Check if the leading character in entry is a Special Character
+   specchat = checkstring[0].to_s[0].to_s
+   puts "[VALIDATOR]:: Found lead character in speclist"+(sleep $pause; if $verb; ": #{checkstring}"; else ""; end) if $diag
+   #  Check if first location after split is a valid email address or not
+   begin
+    if not validemail(if checkstring.split(":").length >= 2; checkstring.split(":")[0].delete! specchat; end) ||
+     begin
+      if not validemail(if checkstring.split(";").length >= 2; checkstring.split(";")[0].delete! specchat; end) ||
+       begin
+        if not validemail(if checkstring.split("|").length >= 2; checkstring.split("|")[0].delete! specchat; end) ||
+         begin
+          if not validemail(if checkstring.split("\t").length >= 2; checkstring.split("\\t")[0].delete! specchat; end)
+           puts "[VALIDATOR]:: No valid email in the first set"+(sleep $pause; if $verb; ": #{checkstring}"; else ""; end) if $diag
+           begin
+            if quoted(checkstring) == false # Process entry to validate if the entry is quoted or "?" and if not upwdsplit
+             begin
+              if questions(checkstring) == false
+               unknown(checkstring)
+               puts "[VALIDATOR]:: Exiting"+(sleep $pause; if $verb; ": #{checkstring}"; else ""; end) if $diag
+               return true
+              end
+             rescue => someerror; puts "[VALIDATOR]:: 1Exiting Failed to parse contents #{someerror}"; exit
+             end  # Future use case, if they arrise
+            end
+           rescue => someerror; puts "[VALIDATOR]:: 2Exiting Failed to parse contents #{someerror}"; exit
+           end  # Future use case, if they arrise
+          end
+         rescue => someerror; puts "[VALIDATOR]:: 3Exiting Failed to parse contents #{someerror}"; exit
+         end  # Future use case, if they arrise
+ 	      end
+       rescue => someerror; puts "[VALIDATOR]:: 4Exiting Failed to parse contents #{someerror}"; exit
+       end  # Future use case, if they arrise
+      end
+     rescue => someerror; puts "[VALIDATOR]:: 5Exiting Failed to parse contents #{someerror}"; exit
+     end  # Future use case, if they arrise
+    end
+   rescue => someerror; puts "[VALIDATOR]:: 6Exiting Failed to parse contents #{someerror}"; exit
+   end  # Future use case, if they arrise
+  else
+   puts "[VALIDATOR]:: No leading Special Characters found, sending to decider"+(sleep $pause; if $verb; ": #{checkstring}"; else ""; end) if $diag
+   puts "[VALIDATOR]:: Exiting"+(sleep $pause; if $verb; ": #{checkstring}"; else ""; end) if $diag
+   if decider(checkstring) == true;  puts "[VALIDATOR]:: Exiting" if $diag
+    return true; end
+  end
+ rescue => someerror; puts "[VALIDATOR]:: Exiting Failed to parse contents #{someerror}"; exit
  end
+ puts "[VALIDATOR]:: Exiting" if $diag
+ return true
 end
 # [questions] ##################################################################
-def decider(x)
- puts "[DECIDER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
+def decider(decisions)
+ puts "[DECIDER]:: Entering"+(sleep $pause; if $verb; ": #{decisions}"; else ""; end) if $diag
  begin
   trigger = false # Set to 0 for initial process
   (if $verb; puts "[DECIDER]:: Default trigger: #{trigger}"; else ""; end) if $diag
@@ -386,480 +455,487 @@ def decider(x)
     puts "[DECIDER]:: Started Processing entry for catagorization" if $diag
     # Attempt to identify the structure of the entry through indepth validation routines
     $splitchar.each { | schar |
-     if x.split(schar).length >= 2; if lenrun(schar,x) == true; trigger = true; puts "[DECIDER]:: split at #{schar}" if $diag; return true; end; end
+     if decisions.split(schar).length >= 2; if lenrun(schar,decisions) == true; trigger = true; puts "[DECIDER]:: split at #{schar}" if $diag;  puts "[DECIDER]:: Exiting" if $diag; return true; end; end
     }
     puts "[DECIDER]:: Finished Processing entry for catagorization" if $diag
    rescue => someerror
-    puts "[DECIDER]:: Failed at splitting, return true"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+    puts "[DECIDER]:: Failed at splitting, return true"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
     trigger = true  # Return true even in failure to stop the loop
     (if $verb; puts "[DECIDER]:: Default trigger: #{trigger}"; else ""; end) if $diag
    end
-   puts "[DECIDER]:: This should never happen, return true"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+   puts "[DECIDER]:: This should never happen, return true"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
    trigger = true  # Return true even in failure to stop the loop
    (if $verb; puts "[DECIDER]:: Default trigger: #{trigger}"; else ""; end) if $diag
   end
-  puts "[DECIDER]:: Exiting" if $diag
- rescue => someerror
-  puts "[DECIDER]:: Failed to make decision"+(if $verb; ": #{someerror}"; else ""; end) if $diag
- end
+  return true
+ rescue => someerror; puts "[DECIDER]:: Failed to make decision"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; end
+ puts "[DECIDER]:: Exiting" if $diag
 end
 # [questions] ##################################################################
-def questions(x)
+def questions(queststring)
  begin
-  puts "[QUESTION]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if x[0].to_s[0] == '?'  # Check if the leading character is a questionmark
-   puts "[QUESTION]:: First character is a questionmark"+(if $verb; ": #{x}"; else ""; end) if $diag
-   x = x.strip()  # Attempt to strip any newline character from end of entry
-   puts "[QUESTION]:: Ensure input has no newline character(s)"+(if $verb; ": #{x}"; else ""; end) if $diag
+  puts "[QUESTION]:: Entering"+(sleep $pause; if $verb; ": #{queststring}"; else ""; end) if $diag
+  if queststring[0].to_s[0] == '?'  # Check if the leading character is a questionmark
+   puts "[QUESTION]:: First character is a questionmark"+(sleep $pause; if $verb; ": #{queststring}"; else ""; end) if $diag
+   queststring = queststring.strip()  # Attempt to strip any newline character from end of entry
+   puts "[QUESTION]:: Ensure input has no newline character(s)"+(sleep $pause; if $verb; ": #{queststring}"; else ""; end) if $diag
    # Start spliting the entry from different known delimeters and attempt to vlaidate the string with lenrun
    if (
     $splitchar.each { |schar |
      if (
-      puts "[QUESTION]:: Iterating split character"+(if $verb; ": #{schar}" ; else ""; end) if $diag
-      if validemail(x.split(schar)[1])
-       email = x.split(schar)[1].split(" ")[-1]
-       puts "[QUESTION]:: Set email from first element"+(if $verb; ": #{email}" ; else ""; end) if $diag
-       remainder =  x.split(schar)[2..-1].join(schar)
-       puts "[QUESTION]:: Set remainder of string"+(if $verb; ": #{remainder}" ; else ""; end) if $diag
+      puts "[QUESTION]:: Iterating split character"+(sleep $pause; if $verb; ": #{schar}" ; else ""; end) if $diag
+      if validemail(queststring.split(schar)[1])
+       email = queststring.split(schar)[1].strip(" ")
+       puts "[QUESTION]:: Set email from first element"+(sleep $pause; if $verb; ": #{email}" ; else ""; end) if $diag
+       remainder =  queststring.split(schar)[2..-1].join(schar)
+       puts "[QUESTION]:: Set remainder of string"+(sleep $pause; if $verb; ": #{remainder}" ; else ""; end) if $diag
        newmail = email+schar+remainder
-       puts "[QUESTION]:: Set new email"+(if $verb; ": #{newmail}" ; else ""; end) if $diag
+       puts "[QUESTION]:: Set new email"+(sleep $pause; if $verb; ": #{newmail}" ; else ""; end) if $diag
+       puts "[QUESTION]:: Exiting" if $diag
        lenrun(schar,newmail)
       end
       ) == true
-      puts "[QUESTION]:: Valid entry found"+(if $verb; ": #{newmail}" ; else ""; end) if $diag
+      puts "[QUESTION]:: Valid entry found"+(sleep $pause; if $verb; ": #{newmail}" ; else ""; end) if $diag
+      puts "[QUESTION]:: Exiting" if $diag
       return true
      end
     }
    ) != true
-    puts "[QUESTION]:: Appending to badsplit list"+(if $verb; ": #{x}"; else ""; end) if $diag
-    badsplit(x)
+    puts "[QUESTION]:: Appending to badsplit list"+(sleep $pause; if $verb; ": #{x}"; else ""; end) if $diag
+    puts "[QUESTION]:: Exiting" if $diag
+    badsplit(queststring)
     return true
    end
-   puts "[QUESTION]:: Exiting" if $diag
   end
- rescue => someerror
-  puts "[QUESTION]:: Failed to make process input"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+ rescue => someerror;puts "[QUESTION]:: Failed to make process input"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
  end
+ puts "[QUESTION]:: Exiting" if $diag
 end
  # [encoded] ##################################################################
 def encoded(plainstring)
  begin
-  puts "[ENCODEX]:: Entering"+(if $verb; ": #{plainstring}"; else ""; end) if $diag
+  puts "[ENCODEX]:: Entering"+(sleep $pause; if $verb; ": #{plainstring}"; else ""; end) if $diag
   begin
    # Attempt to remove newline characters from entry and return results
    encodedstring = plainstring.strip()  # Removes newline character with standard ruby strip
    puts "[ENCODEX]:: Generic Strip newline from #{encodedstring}" if $diag
   rescue => someerror
-   puts "[ENCODEX]:: Failed to strip newline from from string"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+   puts "[ENCODEX]:: Failed to strip newline from from string"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
    begin
     encodedstring = convert8string(plainstring).strip()  # Standard converstion for Standard English
     puts "[ENCODEX]:: Encode string in utf8 #{encodedstring}" if $diag
    rescue => someerror
-     puts "[ENCODEX]:: Failed encode string in utf8"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+     puts "[ENCODEX]:: Failed encode string in utf8"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
     begin
      encodedstring =  conver16string(plainstring).strip()  # Can happen with Arabic/Chines chars
      puts "[ENCODEX]:: Encode string in utf16 #{encodedstring}" if $diag
     rescue => someerror
-     puts "[ENCODEX]:: Failed encode string in utf16"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+     puts "[ENCODEX]:: Failed encode string in utf16"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
      begin
       encodedstring = utf821628(plainstring).strip()  # Only happens when difficult to encode entries are present (China)
       puts "[ENCODEX]:: Encode string UTC8=>16=>8 #{encodedstring}" if $diag
      rescue => someerror
-      puts "[ENCODEX]:: Failed encode string in UTF8=>16=>8"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+      puts "[ENCODEX]:: Failed encode string in UTF8=>16=>8"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag
      end
-     puts "[ENCODEX]:: Exiting" if $diag
+     puts "[ENCODEX]:: Exiting"+(sleep $pause; if $verb; ": #{encodedstring}"; else ""; end) if $diag
      return encodedstring
     end
-    puts "[ENCODEX]:: Exiting" if $diag
+    puts "[ENCODEX]:: Exiting"+(sleep $pause; if $verb; ": #{encodedstring}"; else ""; end) if $diag
     return encodedstring  
    end
-   puts "[ENCODEX]:: Exiting" if $diag
+   puts "[ENCODEX]:: Exiting"+(sleep $pause; if $verb; ": #{encodedstring}"; else ""; end) if $diag
    return encodedstring
   end
-  puts "[ENCODEX]:: Exiting" if $diag
+  puts "[ENCODEX]:: Exiting"+(sleep $pause; if $verb; ": #{encodedstring}"; else ""; end) if $diag
   return encodedstring
- rescue => someerror
-  puts "[ENCODEX]:: Failed to encodes input"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+ rescue => someerror; puts "[ENCODEX]:: Failed to encodes input"+(sleep $pause; if $verb; ": #{encodedstring}"; else ""; end) if $diag
  end
+ puts "[ENCODEX]:: Exiting"+(sleep $pause; if $verb; ": #{plainstring}"; else ""; end) if $diag
 end
 # [lenrun] ####################################################################
-def lenrun(char, x)
+def lenrun(char, lenstring)
  begin
-  puts "[LENRUN]:: Entering"+(if $verb; ": #{char}, #{x}"; else ""; end) if $diag
-  if x.split(char).length >= 2  # If split results in a length of 2 or more
-   puts "[LENRUN]:: Passed length requirement"+(if $verb; ":#{x.split(char).length}"; else ""; end) if $diag
-   if x.split(char).length == 2  # If split is exact length, process further and validate entries
-    puts "[LENRUN]:: Entry is exact"+(if $verb; ":#{x.split(char).length}"; else ""; end) if $diag
-    set1 = x.split(char)[0]; set2 = x.split(char)[1]  # split and set positions based on length, and validate
-    puts "[LENRUN]:: Split entry in parts"+(if $verb; ": #{set1}, #{set2}"; else ""; end) if $diag
-    if validemail(set1) != true && if validemail(set2) != true; puts "[USPWD]:: NO VALID EMAILS FOUND: #{x} #{$counter}" if $diag; upwdsplit(x); return true; end; end
-    if validemail(set1) == true; $newx = set1+char+set2; puts "[LENRUN]:: Valid set1 #{set1}" if $diag; end
-    if validemail(set2) == true; $newx = set2+char+set1; puts "[LENRUN]:: Valid set2 #{set2}" if $diag; end
-    puts "[LENRUN]:: Combined new entry"+(if $verb; ": #{$newx}"; else ""; end) if $diag
+  $newx = ""
+  puts "[LENRUN]:: Entering"+(sleep $pause; if $verb; ": #{char}, #{lenstring}"; else ""; end) if $diag
+  if lenstring.split(char).length >= 2  # If split results in a length of 2 or more
+   puts "[LENRUN]:: Passed length requirement"+(sleep $pause; if $verb; ":#{lenstring.split(char).length}"; else ""; end) if $diag
+   if lenstring.split(char).length == 2  # If split is exact length, process further and validate entries
+    puts "[LENRUN]:: Entry is exact"+(sleep $pause; if $verb; ":#{lenstring.split(char).length}"; else ""; end) if $diag
+    set1 = lenstring.split(char)[0]; set2 = lenstring.split(char)[1]  # split and set positions based on length, and validate
+    if validemail(set1); 
+     $newx = set1+char+set2; 
+     puts "[LENRUN]:: Valid set1 #{set1}" if $diag;
+    elsif validemail(set2); 
+     $newx = set2+char+set1; 
+     puts "[LENRUN]:: Valid set2 #{set2}" if $diag;
+    else; 
+     puts "[LENRUN::USPWD]:: NO VALID EMAILS FOUND: #{lenstring} #{$counter}" if $diag; 
+     upwdsplit(lenstring); 
+     return true; 
+    end;
    end
   end
-  if x.split(char).length >= 3  # If split results in a length of3 or more
-   puts "[LENRUN]:: Entry is exact"+(if $verb; ":#{x.split(char).length}"; else ""; end) if $diag
-   set1 = x.split(char)[0]; set2 = x.split(char)[1]; set3 = x.split(char)[2]  # split and set positions based on length, and validate
-   puts "[LENRUN]:: Split entry in parts"+(if $verb; ": #{set1}, #{set2}, #{set3}"; else ""; end) if $diag
-   if validemail(set1) != true && if validemail(set2) != true && if validemail(set3) != true || if validemail(set4) != true; unknown(x);
-   puts "[USPWD]:: NO VALID EMAILS FOUND: #{x} #{$counter}" if $diag; return true; end; end; end; end
-   if x.split(char).length > 3; set4 = ":"+x.split(char)[3..-1].join(char); else; set4 = ""; end
-   if validemail(set1) == true && if validemail(set2) != true || if validemail(set3) != true; 
-    $newx = set1+char+set2+char+set3+set4; puts "[LENRUN]:: Valid set1 #{set1}" if $diag; end; end; end
-   if validemail(set2) == true && if validemail(set1) != true || if validemail(set3) != true; 
-    $newx = set2+char+set1+char+set3+set4; puts "[LENRUN]:: Valid set2 #{set2}" if $diag; end; end; end
-   if validemail(set3) == true && if validemail(set1) != true || if validemail(set2) != true; 
-    $newx = set3+char+set1+char+set2+set4; puts "[LENRUN]:: Valid set3 #{set3}" if $diag; end; end; end
-   puts "[LENRUN]:: Combined new entry"+(if $verb; ": #{$newx}"; else ""; end) if $diag 
+  if lenstring.split(char).length >= 3  # If split results in a length of 3 or more
+   puts "[LENRUN]:: Entry is 3 or greater "+(sleep $pause; if $verb; ":#{lenstring.split(char).length}"; else ""; end) if $diag
+   set1 = lenstring.split(char)[0]
+   set2 = lenstring.split(char)[1]
+   if $web.include? set1  # check if set1 has signature of URL
+    if set2.split("/").length > 2  # check if set2 has signature of URL
+     if websplit(lenstring) == true # append to weburl list
+      return true  # return true to continue applications logic per entry
+     end
+    end
+   end
+   set3 = lenstring.split(char)[2]  # split and set positions based on length, and validate
+   if lenstring.split(char).length > 3; 
+    set4 = lenstring.split(char)[3]
+   else;
+     set4 = lenstring.split(char)[3..1].join(char)
+    end
+   end
+   while $newx == ""
+    if validemail(set1);    $newx = set1+char+set2+char+set3+set4; puts "[LENRUN]:: Valid set1 #{set1}" if $diag
+    elsif validemail(set2); $newx = set2+char+set1+char+set3+set4; puts "[LENRUN]:: Valid set2 #{set2}" if $diag
+    elsif validemail(set3); $newx = set3+char+set1+char+set2+set4; puts "[LENRUN]:: Valid set3 #{set3}" if $diag
+    elsif validemail(set4); $newx = set4+char+set1+char+set2+char+set3; puts "[LENRUN]:: Valid set4 #{set4}" if $diag
+    else
+     unknwon(lenstring); puts "[LENRUN]:: No valid email found, appended to unknown #{set3}" if $diag; return true
+   end
+   puts "[LENRUN]:: Split entry in parts"+(sleep $pause; if $verb; ": #{set1}, #{set2}, #{set3}, #{set4}"; else ""; end) if $diag
   end
+  puts "[LENRUN]:: Combined new entry"+(sleep $pause; if $verb; ": #{$newx}"; else ""; end) if $diag 
   if $newx.to_s != ""  # as long as newx is not blank
    $data[:cleaned].append($newx)  # Append newx to cleaned list of known good sets
-   puts "[LENRUN]:: Append newx to clean list"+(if $verb; ": #{$newx}"; else ""; end) if $diag
+   puts "[LENRUN]:: Append newx to clean list"+(sleep $pause; if $verb; ": #{$newx}"; else ""; end) if $diag
    # Attempt to have entry parsed into respective entry list
-   if char.to_s == "\t"; if tabsplit($newx) == true;   puts "[LENRUN]:: TABBED - #{$newx} #{$counter}" if $diag; return true; end; end
-   if char.to_s == ":";  if colonsplit($newx) == true; puts "[LENRUN]:: COLON - #{$newx} #{$counter}" if $diag; return true; end; end
-   if char.to_s == ";";  if semisplit($newx) == true;  puts "[LENRUN]:: SEMI - #{$newx} #{$counter}" if $diag; return true; end; end
-   if char.to_s == "|";  if pipesplit($newx) == true;  puts "[LENRUN]:: PIPE - #{$newx} #{$counter}" if $diag; return true; end; end
-  else  # if entry does not quantify into its repsective list, add entry to unkwown list
-   unknown(x)
-   puts "[LENRUN]:: NO VALID FORMATS FOUND: #{x} #{$counter}" if $diag
-   return true
+   if char.to_s == "\t"; if tabsplit(lenstring) == true;   puts "[LENRUN]:: TABBED - #{$newx} #{$counter}" if $diag;  puts "[LENRUN]:: Exiting" if $diag; return true; end; end
+   if char.to_s == ":";  if colonsplit(lenstring) == true; puts  "[LENRUN]:: COLON - #{$newx} #{$counter}" if $diag;  puts "[LENRUN]:: Exiting" if $diag; return true; end; end
+   if char.to_s == ";";  if semisplit(lenstring) == true;  puts   "[LENRUN]:: SEMI - #{$newx} #{$counter}" if $diag;  puts "[LENRUN]:: Exiting" if $diag; return true; end; end
+   if char.to_s == "|";  if pipesplit(lenstring) == true;  puts   "[LENRUN]:: PIPE - #{$newx} #{$counter}" if $diag;  puts "[LENRUN]:: Exiting" if $diag; return true; end; end
+   # if entry does not quantify into its repsective list, add entry to unkwown list
+  else; unknown(lenstring); puts "[LENRUN]:: NO VALID FORMATS FOUND: #{lenstring} #{$counter}" if $diag; puts "[LENRUN]:: Exiting" if $diag; return true
   end
-  puts "[LENRUN]:: Exiting" if $diag
- rescue => someerror
-  puts "[LENRUN]:: Failed to run length of input"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+ rescue => someerror; puts "[LENRUN]:: Failed to run length of input"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end); puts "[LENRUN]:: Exiting" if $diag; exit
  end
+ puts "[LENRUN]:: Exiting" if $diag
  return
 end
 # [quoted] ##################################################################
-def quoted(x)  # Checks if entry is quoted of not
- puts "[QUOTED]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
+def quoted(quotestring)  # Checks if entry is quoted of not
+ puts "[QUOTED]:: Entering"+(sleep $pause; if $verb; ": #{quotestring}"; else ""; end) if $diag
  begin
-  if x[0].to_s[0] == '"'
-	 puts "[QUOTED]:: Append to Quoted list" if $diag
-	 quotesplit(x)  # If entry is quotes, run entry through respective parser
+  # If entry is quotes, run entry through respective parser
+  if quotestring[0].to_s[0] == '"'; puts "[QUOTED]:: Append to Quoted list\n[QUOTED]:: Exiting" if $diag; quotesplit(quotestring); return true
 	end
- rescue => someerror
-  puts "[QUOTED]:: Failed to identify quoted content"+(if $verb; ": #{someerror}"; else ""; end) if $diag
+ rescue => someerror; puts "[QUOTED]:: Failed to identify quoted content"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end); puts "[QUOTED]:: Exiting" if $diag
  end
- puts "[QUOTED]:: Exiting" if $diag
 end
 # [makehash] ##################################################################
 def makehash(datain)  # Returns a MD5 hash of given dataset
  begin
-  puts "[MAKEHASH]:: Entering"+(if $verb; ": #{datain}"; else ""; end) if $diag
+  puts "[MAKEHASH]:: Entering"+(sleep $pause; if $verb; ": #{datain}"; else ""; end) if $diag
   newhash = $md5.update(datain).hexdigest
-  puts "[MAKEHASH]:: New hash"+(if $verb; ": #{newhash}"; else ""; end) if $diag
+  puts "[MAKEHASH]:: New hash"+(sleep $pause; if $verb; ": #{newhash}"; else ""; end) if $diag
   $md5.reset  # Reset for any additional use after completion
   puts "[MAKEHASH]:: Exiting" if $diag
-  return newhash
-rescue => someerror
-  puts "[MAKEHASH]:: Failed producing MD5 sum"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+ rescue => someerror; puts "[MAKEHASH]:: Failed producing MD5 sum"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end);  puts "[MAKEHASH]:: Exiting" if $diag ; exit
  end
+ return newhash
 end
 # [validemail] ################################################################
 def validemail(email)  # Check if entry is a valid email address
  begin
-  puts "[VALIDMAIL]:: Entering" +(if $verb; ": #{email}"; else ""; end) if $diag
-  if /.+@.+\..+/i.match(email); return true; end
-  puts "[VALIDMAIL]:: Email validated"+(if $verb; ": #{email}"; else ""; end) if $diag
-  puts "[VALIDMAIL]:: Exiting" if $diag
+  puts "[VALIDMAIL]:: Entering" +(sleep $pause; if $verb; ": #{email}"; else ""; end) if $diag
+  if /.+@.+\..+/i.match(email); puts "[VALIDMAIL]:: Email validated"+(sleep $pause; if $verb; ": #{email}"; else ""; end) if $diag; puts "[VALIDMAIL]:: Exiting" if $diag; return true; else; puts "[VALIDMAIL]:: INVALID Email "+(sleep $pause; if $verb; ": #{email}"; else ""; end) if $diag; end
  rescue => someerror
-  puts "[VALIDMAIL]:: Failed in validating email"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[VALIDMAIL]:: Exiting" if $diag
+  puts "[VALIDMAIL]:: Failed in validating email"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [valid4ip] ################################################################
 def valid4ip(address)  # Check if entry is a valid ipv4 address
  begin
-  puts "[VALIDIPV4]:: Entering"+(if $verb; ": #{address}"; else ""; end) if $diag
+  puts "[VALIDIPV4]:: Entering"+(sleep $pause; if $verb; ": #{address}"; else ""; end) if $diag
   ip = IPAddr.new(address)
-  if ip.ipv4?; puts "[VALIDIPV4]:: IPv4 validated"+(if $verb; ": #{address}"; else ""; end) if $diag; return true; end
-  puts "[VALIDIPV4]:: Exiting" if $diag
+  if ip.ipv4?; puts "[VALIDIPV4]:: IPv4 validated"+(sleep $pause; if $verb; ": #{address}"; else ""; end) if $diag;  puts "[VALIDIPV4]:: Exiting"; return true; end
  rescue => someerror
-  puts "[VALIDIPV4]:: Failed in ipv4 validation"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
- end
+  puts "[VALIDIPV4]:: Failed in ipv4 validation"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[VALIDIPV4]:: Exiting" if $diag
+end
 end
 # [valid6ip] ################################################################
 def valid6ip(address)  # Check if entry is a valid ipv6 address
  begin
-  puts "[VALIDIPV6]:: Entering"+(if $verb; ": #{address}"; else ""; end) if $diag
+  puts "[VALIDIPV6]:: Entering"+(sleep $pause; if $verb; ": #{address}"; else ""; end) if $diag
   ip = IPAddr.new(address)
-  if ip.ipv6?; puts "[VALIDIPV6]:: IPv6 validated"+(if $verb; ": #{address}"; else ""; end) if $diag; return true; end
-  puts "[VALIDIPV6]:: Exiting" if $diag
+  if ip.ipv6?; puts "[VALIDIPV6]:: IPv6 validated"+(sleep $pause; if $verb; ": #{address}"; else ""; end) if $diag;  puts "[VALIDIPV6]:: Exiting"; return true; end
  rescue => someerror
-  puts "[VALIDIPV6]:: Failed in ipv6 validation"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
- end
+  puts "[VALIDIPV6]:: Failed in ipv6 validation"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[VALIDIPV6]:: Exiting" if $diag
+end
 end
 # [convert8string] ################################################################
-def convert8string(str1)  # Convert entry into UTF8
+def convert8string(xstring)  # Convert entry into UTF8
  begin
-  puts "[UTF*STR]:: Entering"+(if $verb; ": #{str1}"; else ""; end) if $diag
+  puts "[UTF*STR]:: Entering"+(sleep $pause; if $verb; ": #{xstring}"; else ""; end) if $diag
   if String.method_defined?(:encode)
-   str2 = str1.encode!('UTF-8', :invalid => :replace, :replace => '')
-   puts "[UTF*STR]:: Str UTF8 validated"+(if $verb; ": #{str2}"; else ""; end) if $diag
-   return str2
+   estring = xstring.encode!('UTF-8', :invalid => :replace, :replace => '')
+   puts "[UTF*STR]:: Str UTF8 validated"+(sleep $pause; if $verb; ": #{estring}"; else ""; end) if $diag
+   puts "[UTF*STR]:: Exiting" if $diag
+   return estring
   else
    ic = Iconv.new('UTF-8', 'UTF-8//IGNORE')
-   str2 = ic.iconv(str1)
-   puts "[UTF*STR]:: Str UTF8+IGNORE validated"+(if $verb; ": #{str2}"; else ""; end) if $diag
-   return str2
+   str2 = ic.iconv(xstring)
+   puts "[UTF*STR]:: Str UTF8+IGNORE validated"+(sleep $pause; if $verb; ": #{estring}"; else ""; end) if $diag
+   puts "[UTF*STR]:: Exiting" if $diag
+   return estring
   end
-  puts "[UTF*STR]:: Exiting" if $diag
  rescue => someerror
-  puts "[UTF*STR]:: Failed in convert UFT 8 string validation"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[UTF*STR]:: Failed in convert UFT 8 string validation"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [convert16string] ################################################################
-def convert16string(str1)  # Convert entry from UTF8 into UTF16
+def convert16string(xstring)  # Convert entry from UTF8 into UTF16
  begin
-  puts "[UTF*STR]:: Entering"+(if $verb; ": #{str1}"; else ""; end) if $diag
+  puts "[UTF*STR]:: Entering"+(sleep $pause; if $verb; ": #{xstring}"; else ""; end) if $diag
   if String.method_defined?(:encode)
-   str2 = str1.encode!('UTF-16', 'UTF-8', :invalid => :replace, :replace => '')
-   puts "[UTF*STR]:: Str UTF16 validated"+(if $verb; ": #{str2}"; else ""; end) if $diag
-   return str2
+   estring = xstring.encode!('UTF-16', 'UTF-8', :invalid => :replace, :replace => '')
+   puts "[UTF*STR]:: Str UTF16 validated"+(sleep $pause; if $verb; ": #{estring}"; else ""; end) if $diag
+   puts "[UTF*STR]:: Exiting" if $diag
+   return estring
   else
    ic = Iconv.new('UTF-8', 'UTF-8//IGNORE')
-   str2 = ic.iconv(str1)
-   puts "[UTF*STR]:: Str UTF8+IGNORE validated"+(if $verb; ": #{str2}"; else ""; end) if $diag
-   return str2
+   estring = ic.iconv(xstring)
+   puts "[UTF*STR]:: Str UTF8+IGNORE validated"+(sleep $pause; if $verb; ": #{estring}"; else ""; end) if $diag
+   puts "[UTF*STR]:: Exiting" if $diag
+   return estring
   end
-  puts "[UTF*STR]:: Exiting" if $diag
  rescue => someerror
-  puts "[UTF*STR]:: Failed in convert UTF16 string validation"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[UTF*STR]:: Failed in convert UTF16 string validation"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [utf821628] ################################################################
-def utf821628(str1)  # Convert entry from UTF8 into UTF16 and back into UTF8
+def utf821628(xstring)  # Convert entry from UTF8 into UTF16 and back into UTF8
  begin
-  puts "[UTF*STR]:: Entering"+(if $verb; ": #{str1}"; else ""; end) if $diag
+  puts "[UTF*STR]:: Entering"+(sleep $pause; if $verb; ": #{str1}"; else ""; end) if $diag
   if String.method_defined?(:encode)
-   str2 = str1.encode!('UTF-16', 'UTF-8', :invalid => :replace, :replace => '')
-   str3 = str2.encode!('UTF-8', 'UTF-16')
-   puts "[UTF*STR]:: Str UTF16/8/16 validated"+(if $verb; ": #{str3}"; else ""; end) if $diag
-   return str3
+   x1string = xstring.encode!('UTF-16', 'UTF-8', :invalid => :replace, :replace => '')
+   estring = x1string.encode!('UTF-8', 'UTF-16')
+   puts "[UTF*STR]:: Str UTF16/8/16 validated"+(sleep $pause; if $verb; ": #{estring}"; else ""; end) if $diag
+   puts "[UTF*STR]:: Exiting" if $diag
+   return estring
   else
    ic = Iconv.new('UTF-8', 'UTF-8//IGNORE')
-   str2 = ic.iconv(str1)
-   puts "[UTF*STR]:: Str UTF16/8/16 validated"+(if $verb; ": #{str2}"; else ""; end) if $diag
-   return str2
+   estring = ic.iconv(xstring)
+   puts "[UTF*STR]:: Str UTF16/8/16 validated"+(sleep $pause; if $verb; ": #{estring}"; else ""; end) if $diag
+   puts "[UTF*STR]:: Exiting" if $diag
+   return estring
   end
-  puts "[UTF*STR]:: Exiting" if $diag
  rescue => someerror
-  puts "[UTF*STR]:: Failed in convert 8 into 16 into string validation"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[UTF*STR]:: Failed in convert 8 into 16 into string validation"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [badsplit] ##################################################################
-def badsplit(x)  # create entry if string did not split
+def badsplit(xstring)  # create entry if string did not split
  begin
-  puts "[BADCHARWRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:badstart].length >= $wsize
-   $data[:badstart].append(x)
-   puts "[BADCHARWRITER]:: #{$counter}"
-   IO.write(File.join($base,"badstart.txt"),$data[:badstart].join("\n"), mode: 'a')
+  puts "[BADCHARWRITER]:: Entering"+(sleep $pause; if $verb; ": #{xstring}"; else ""; end) if $diag
+  if $data[:badstart].length >= $wsize || $dumpall && $data[:badstart].length.to_i >= 1;
+   filename = File.join($base,"badstart.txt")
+   puts "[BADCHARWRITER]:: #{filename}, #{$counter}"
+   IO.write(filename,$data[:badstart].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:badstart] = []
-  else
-   puts "[BADCHAR]:: #{x}"
-   $data[:badstart].append(x)
+   $data[:badstart].append(xstring)
+  else; puts "[BADCHAR]:: #{xstring}" if $diag; $data[:badstart].append(xstring)
   end
   puts "[BADCHARWRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[BADCHARWRITER]:: Failed to write badchar list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[BADCHARWRITER]:: Failed append to badchar list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [tabsplit] ##################################################################
-def tabsplit(x)  # Attempt to split entry with tab
+def tabsplit(tabstring)  # Attempt to split entry with tab
  begin
-  puts "[TAB\\tWRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:tabbed].length >= $wsize
-   puts "[TAB\\tWRITER]:: #{$counter}"
-   IO.write(File.join($base,"tabbed.txt"), $data[:tabbed].join("\n"), mode: 'a')
+  puts "[TAB\\tWRITER]:: Entering"+(sleep $pause; if $verb; ": #{tabstring}"; else ""; end) if $diag
+  if $data[:tabbed].length >= $wsize || $dumpall && $data[:tabbed].length.to_i >= 1;
+   filename = File.join($base,"tabbed.txt")
+   puts "[TAB\\tWRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:tabbed].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:tabbed] = []
-   $data[:tabbed].append(x)
-  else
-   $data[:tabbed].append(x)
+   $data[:tabbed].append(tabstring)
+  else; $data[:tabbed].append(tabstring)
   end
   puts "[TAB\\tWRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[TAB\\tWRITER]:: Failed to write tabbed list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[TAB\\tWRITER]:: Failed append to write tabbed list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [quotesplit] #################################################################
-def quotesplit(x)  # Add entry into quoted list
+def quotesplit(quotestring)  # Add entry into quoted list
  begin
-  puts "[QUOTEWRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:quoted].length >= $wsize
-   $data[:quoted].append(x)
-   puts "[QUOTEWRITER]:: #{$counter}"
-   IO.write(File.join($base,"quoted.txt"), $data[:quoted].join("\n"), mode: 'a')
+  puts "[QUOTEWRITER]:: Entering"+(sleep $pause; if $verb; ": #{quotestring}"; else ""; end) if $diag
+  if $data[:quoted].length >= $wsize || $dumpall && $data[:quoted].length.to_i >= 1;
+   filename = File.join($base,"quoted.txt")
+   puts "[QUOTEWRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:quoted].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:quoted] = []
-  else
-   puts "[QUOTEWRITER]:: #{x}"
-   $data[:quoted].append(x)
+   $data[:quoted].append(quotestring)
+  else; puts "[QUOTEWRITER]:: #{quotestring}"; $data[:quoted].append(quotestring)
   end
   puts "[QUOTEWRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[QUOTEWRITER]:: Failed to quoted list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[QUOTEWRITER]:: Failed append to quoted list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [pipesplit] #################################################################
-def pipesplit(x)  # Attempt to split entry with pipe
+def pipesplit(pipestring)  # Attempt to split entry with pipe
  begin
-  puts "[PIPE|WRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:pipe].length >= $wsize
-   puts "[PIPE|WRITER]:: #{$counter}"
-   IO.write(File.join($base,"pipe.txt"), $data[:pipe].join("\n"), mode: 'a')
+  puts "[PIPE|WRITER]:: Entering"+(sleep $pause; if $verb; ": #{pipestring}"; else ""; end) if $diag
+  if $data[:pipe].length >= $wsize || $dumpall && $data[:pipe].length.to_i >= 1;
+   filename = File.join($base,"pipe.txt")
+   puts "[PIPE|WRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:pipe].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:pipe] = []
-   $data[:pipe].append(x)
-  else
-   $data[:pipe].append(x)
+   $data[:pipe].append(pipestring)
+  else; $data[:pipe].append(pipestring)
   end
   puts "[PIPE|WRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[PIPE|WRITER]:: Failed to pipe list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[PIPE|WRITER]:: Failed append to pipe list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [semisplit] #################################################################
-def semisplit(x)  # Attempt to split entry with semicolon
+def semisplit(semistring)  # Attempt to split entry with semicolon
  begin
-  puts "[SEMI;WRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:semi].length >= $wsize
-   puts "[SEMI;WRITER]:: #{$counter}"
-   IO.write(File.join($base,"semi.txt"), $data[:semi].join("\n"), mode: 'a')
+  puts "[SEMI;WRITER]:: Entering"+(sleep $pause; if $verb; ": #{semistring}"; else ""; end) if $diag
+  if $data[:semi].length >= $wsize || $dumpall && $data[:semi].length.to_i >= 1;
+   filename = File.join($base,"semi.txt")
+   puts "[SEMI;WRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:semi].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:semi] = []
-   $data[:semi].append(x)
-  else
-   $data[:semi].append(x)
+   $data[:semi].append(semistring)
+  else; $data[:semi].append(semistring)
   end
   puts "[SEMI;WRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[SEMI;WRITER]:: Failed to semicolon list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[SEMI;WRITER]:: Failed append to semicolon list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [colonsplit] ################################################################
-def colonsplit(x)  # Attempt to split entry with colon
+def colonsplit(colonstring)  # Attempt to split entry with colon
  begin
-  puts "[COLO:WRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:colon].length >= $wsize
-   puts "[COLO:WRITER]:: #{$counter}"
-   IO.write(File.join($base,"colon.txt"), $data[:colon].join("\n"), mode: 'a')
+  puts "[COLO:WRITER]:: Entering"+(sleep $pause; if $verb; ": #{colonstring}"; else ""; end) if $diag
+  if $data[:colon].length >= $wsize || $dumpall && $data[:colon].length.to_i >= 1;
+   filename = File.join($base,"colon.txt")
+   puts "[COLO:WRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:colon].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:colon] = []
-   $data[:colon].append(x)
-  else
-   $data[:colon].append(x)
+   $data[:colon].append(colonstring)
+  else; $data[:colon].append(colonstring)
   end
   puts "[COLO:WRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[COLO:WRITER]:: Failed to colon list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[COLO:WRITER]:: Failed append to colon list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [unknown] ###################################################################
-def unknown(x)   # Add entry to unkwown list
+def unknown(unknownstring)   # Add entry to unkwown list
  begin
-  puts "[KNOW?WRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:unknown].length >= $wsize
-   puts "[KNOW?WRITER]:: #{$counter}"
-   IO.write(File.join($base,"unknown.txt"), $data[:unknown].join("\n"), mode: 'a')
+  puts "[KNOW?WRITER]:: Entering"+(sleep $pause; if $verb; ": #{unknownstring}"; else ""; end) if $diag
+  if $data[:unknown].length >= $wsize || $dumpall && $data[:unknown].length.to_i >= 1;
+   filename = File.join($base,"unknown.txt")
+   puts "[KNOW?WRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:unknown].join("\n"), mode: 'a')
+   if $dumpall; return; end
    $data[:unknown] = []
-   $data[:unknown].append(x)
-  else
-   $data[:unknown].append(x)
+   $data[:unknown].append(unknownstring)
+  else; $data[:unknown].append(unknownstring)
   end
   puts "[KNOW?WRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[KNOW?WRITER]:: Failed to unknown list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[KNOW?WRITER]:: Failed append to unknown list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 # [upwdsplit] #################################################################
-def upwdsplit(x)  # Add entry into username and password list
+def upwdsplit(upstring)  # Add entry into username and password list
  begin
-  puts "[UPWDWRITER]:: Entering"+(if $verb; ": #{x}"; else ""; end) if $diag
-  if $data[:upwd].length.to_i >= $wsize
-   puts "[UPWDWRITER]:: #{$counter}"
-   IO.write(File.join($base,"userpass.txt"), $data[:upwd].join("\n"), mode: 'a')
-   $data[:upwd] = []
-   $data[:upwd].append(x)
-  else
-   $data[:upwd].append(x)
+  puts "[UPWDWRITER]:: Entering"+(sleep $pause; if $verb; ": #{upstring}"; else ""; end) if $diag
+  if $data[:upwd].length.to_i >= $wsize || $dumpall && $data[:upwd].length.to_i >= 1;
+   filename = File.join($base,"userpass.txt")
+   puts "[UPWDWRITER]:: #{filename}, #{$counter}"
+   IO.write(filename, $data[:upwd].join("\n"), mode: 'a'); 
+   if $dumpall; return; end
+   $data[:upwd] = []; 
+   $data[:upwd].append(upstring)
+  else; $data[:upwd].append(upstring)
   end
   puts "[UPWDWRITER]:: Exiting" if $diag
   return true
  rescue => someerror
-  puts "[UPWDWRITER]:: Failed to userpass list"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  puts "[UPWDWRITER]:: Failed append to userpass list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
+# [websplit] #################################################################
+def websplit(webstring)  # Add entry into web url list
+  begin
+   puts "[WEBWRITER]:: Entering"+(sleep $pause; if $verb; ": #{webstring}"; else ""; end) if $diag
+   if $data[:weburl].length.to_i >= $wsize || $dumpall && $data[:weburl].length.to_i >= 1;
+    filename = File.join($base,"weburl.txt")
+    puts "[WEBWRITER]:: #{filename}, #{$counter}"
+    IO.write(filename, $data[:weburl].join("\n"), mode: 'a');
+    if $dumpall; return; end
+    $data[:weburl] = [];
+    $data[:weburl].append(webstring)
+   else
+    $data[:upwd].append(webstring)
+   end
+   puts "[WEBWRITER]:: Exiting" if $diag
+   return true
+  rescue => someerror
+   puts "[WEBWRITER]:: Failed append to web list"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+  end
+ end
 # [bufferflush] ###############################################################
 def bufferflush  # Write any left over contents within the $data hash
+ $dumpall = true
  begin
   puts "[FINAL]:: Entering" if $diag
   puts "[FINAL]:: Write buffer to disk"
   puts "[FINAL]:: BASE DIR: #{$base}"
   begin
-   puts "[FINAL]:: badchar list"+(if $verb; ": #{$data[:badstart].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"badstart.txt"), $data[:badstart].join("\n"), mode: 'a') if $data[:badstart].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush badstart"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin
-   puts "[FINAL]:: tabbed list"+(if $verb; ": #{$data[:tabbed].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"tabbed.txt"), $data[:tabbed].join("\n"), mode: 'a') if $data[:tabbed].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush tabbed"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin
-   puts "[FINAL]:: quoted list"+(if $verb; ": #{$data[:quoted].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"quoted.txt"), $data[:quoted].join("\n"), mode: 'a') if $data[:quoted].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush quoted"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin
-   puts "[FINAL]:: semi list"+(if $verb; ": #{$data[:semi].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"semi.txt"), $data[:semi].join("\n"), mode: 'a') if $data[:semi].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush semicolon"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin
-   puts "[FINAL]:: colon list"+(if $verb; ": #{$data[:colon].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"colon.txt"), $data[:colon].join("\n"), mode: 'a') if $data[:colon].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush colon"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin
-   puts "[FINAL]:: pipe list"+(if $verb; ": #{$data[:pipe].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"pipe.txt"), $data[:pipe].join("\n"), mode: 'a') if $data[:pipe].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush pipe"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin
-   puts "[FINAL]:: email list"+(if $verb; ": #{$data[:email].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"email.txt"), $data[:email].join("\n"), mode: 'a') if $data[:email].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush email"+(if $verb; ": #{someerror}"; else ""; end)
-  end
-  begin  
-   puts "[FINAL]:: unknown list"+(if $verb; ": #{$data[:unknown].length}"; else ""; end) if $diag
-   IO.write(File.join($base,"unknown.txt"), $data[:unknown].join("\n"), mode: 'a') if $data[:unknown].length > 0
-  rescue => someerror
-   puts "[FINAL]:: Failed to flush unknown"+(if $verb; ": #{someerror}"; else ""; end)
+   puts "[FINAL]:: badchar list"+(sleep $pause; if $verb; if $data[:badstart].length >= 1; ": #{$data[:badstart].length}"; else ""; end; end) if $diag; badsplit("")
+   puts "[FINAL]:: tabbed list"+(sleep $pause; if $verb; if $data[:tabbed].length >= 1; ": #{$data[:tabbed].length}"; else ""; end; end) if $diag; tabsplit("")
+   puts "[FINAL]:: quoted list"+(sleep $pause; if $verb; if $data[:quoted].length >= 1; ": #{$data[:quoted].length}"; else ""; end; end) if $diag; quotesplit("")
+   puts "[FINAL]:: semi list"+(sleep $pause; if $verb; if $data[:semi].length >= 1; ": #{$data[:semi].length}"; else ""; end; end) if $diag; semisplit("")
+   puts "[FINAL]:: colon list"+(sleep $pause; if $verb; if $data[:colon].length >= 1; ": #{$data[:colon].length}"; else ""; end; end) if $diag; colonsplit("")
+   puts "[FINAL]:: pipe list"+(sleep $pause; if $verb; if $data[:pipe].length >= 1; ": #{$data[:pipe].length}"; else ""; end; end) if $diag; pipesplit("")
+   puts "[FINAL]:: email list"+(sleep $pause; if $verb; if $data[:upwd].length >= 1; ": #{$data[:upwd].length}"; else "";end; end) if $diag; upwdsplit("")
+   puts "[FINAL]:: web list"+(sleep $pause; if $verb; if $data[:weburl].length >= 1; ": #{$data[:weburl].length}"; else ""; end; end) if $diag; websplit("")
+   puts "[FINAL]:: unknown list"+(sleep $pause; if $verb; if $data[:unknown].length >= 1; ": #{$data[:unknown].length}"; else ""; end; end) if $diag; unknwon("")
+  rescue => someerror; puts "[FINAL]:: Failed to flush unknown"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end)
   end
   puts "[FINAL]:: Creating unqiued Cleaned list"
-  puts "[FINAL]:: Before Uniqued list"+(if $verb; ": #{$data[:cleaned].length}"; else ""; end) if $diag
+  puts "[FINAL]:: Before Uniqued list"+(sleep $pause; if $verb; ": #{$data[:cleaned].length}"; else ""; end) if $diag
   udump = $data[:cleaned].uniq
-  puts "[FINAL]:: After Uniqued list"+(if $verb; ": #{$data[:cleaned].length}"; else ""; end) if $diag
+  puts "[FINAL]:: After Uniqued list"+(sleep $pause; if $verb; ": #{$data[:cleaned].length}"; else ""; end) if $diag
   puts "[FINAL]:: Creating sorted Cleaned list"
   sdump = udump.sort
   puts "[FINAL]:: Exporting Cleaned list"
   IO.write(File.join($base,"unique_sorted_cleaned.txt"), sdump.join("\n"), mode: 'a')
   puts "[FINAL]:: Exiting" if $diag
- rescue => someerror
-  puts "[FINAL]:: Failed to flush buffers"+(if $verb; ": #{someerror}"; else ""; end) if $diag; exit
+ rescue => someerror; puts "[FINAL]:: Failed to flush buffers"+(sleep $pause; if $verb; ": #{someerror}"; else ""; end) if $diag; exit
  end
 end
 ################################# [MAIN LOGIC] ################################
@@ -867,5 +943,6 @@ puts banner.join("\n")
 userargs  # Get user arguments from CLI
 initial
 mainfun
+puts "Total processed count: #{$counter}"
 puts "[INITIALIZER]:: Application terminating"
 exit
